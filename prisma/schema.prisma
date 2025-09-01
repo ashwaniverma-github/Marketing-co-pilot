@@ -8,25 +8,22 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(cuid())
-  email              String?             @unique
-  name               String?
-  avatar             String?
-  timezone           String              @default("UTC")
-  plan               Plan                @default(FREE)
-  stripeCustomerId   String?             @unique
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  emailVerified      DateTime?
-  image              String?
-  accounts           Account[]
-  analytics          Analytics[]
-  apps               App[]
-  marketingCampaigns MarketingCampaign[]
-  posts              Post[]
-  sessions           Session[]
-  socialAccounts     SocialAccount[]
-  userPreferences    UserPreferences?
+  id               String          @id @default(cuid())
+  email            String?         @unique
+  name             String?
+  avatar           String?
+  timezone         String          @default("UTC")
+  plan             Plan            @default(FREE)
+  stripeCustomerId String?         @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  emailVerified    DateTime?
+  image            String?
+  accounts         Account[]
+  apps             App[]
+  posts            Post[]
+  sessions         Session[]
+  socialAccounts   SocialAccount[]
 
   @@map("users")
 }
@@ -44,7 +41,10 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccounts    SocialAccount[]
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -69,44 +69,25 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-model UserPreferences {
-  id                 String  @id @default(cuid())
-  userId             String  @unique
-  emailNotifications Boolean @default(true)
-  pushNotifications  Boolean @default(true)
-  weeklyReports      Boolean @default(true)
-  aiSuggestions      Boolean @default(true)
-  autoScheduling     Boolean @default(false)
-  defaultTimezone    String  @default("UTC")
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("user_preferences")
-}
 
 model App {
-  id                   String                @id @default(cuid())
-  name                 String
-  tagline              String?
-  description          String?
-  url                  String
-  logoUrl              String?
-  category             AppCategory           @default(PRODUCTIVITY)
-  stage                AppStage              @default(IDEA)
-  status               AppStatus             @default(ACTIVE)
-  launchDate           DateTime?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  userId               String
-  analytics            Analytics[]
-  appKnowledge         AppKnowledge?
-  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  competitors          Competitor[]
-  distributionChannels DistributionChannel[]
-  growthSuggestions    GrowthSuggestion[]
-  marketingCampaigns   MarketingCampaign[]
-  posts                Post[]
-  scrapedData          ScrapedData?
-  targetAudiences      TargetAudience[]
+  id          String      @id @default(cuid())
+  name        String
+  tagline     String?
+  description String?
+  url         String
+  logoUrl     String?
+  category    AppCategory @default(PRODUCTIVITY)
+  stage       AppStage    @default(IDEA)
+  status      AppStatus   @default(ACTIVE)
+  launchDate  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]
+  scrapedData ScrapedData?
 
   @@map("apps")
 }
@@ -170,64 +151,9 @@ model ScrapedData {
   @@map("scraped_data")
 }
 
-model AppKnowledge {
-  id                   String   @id @default(cuid())
-  appId                String   @unique
-  valueProposition     String?
-  targetAudience       String?
-  keyFeatures          String[]
-  uniqueSellingPoints  String[]
-  marketSize           String?
-  competitiveAdvantage String?
-  pricingStrategy      String?
-  revenueModel         String?
-  painPoints           String[]
-  benefits             String[]
-  emotionalTriggers    String[]
-  messagingFramework   Json?
-  primaryKeywords      String[]
-  longTailKeywords     String[]
-  contentThemes        String[]
-  brandTone            String?
-  brandPersonality     String[]
-  communicationStyle   String?
-  brandGuidelines      Json?
-  analysisVersion      String   @default("1.0")
-  confidenceScore      Float?
-  lastAnalyzedAt       DateTime @default(now())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  app                  App      @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  @@map("app_knowledge")
-}
 
-model MarketingCampaign {
-  id             String              @id @default(cuid())
-  name           String
-  description    String?
-  objective      CampaignObjective   @default(AWARENESS)
-  status         CampaignStatus      @default(DRAFT)
-  startDate      DateTime?
-  endDate        DateTime?
-  budget         Float?
-  currency       String              @default("USD")
-  targetAudience Json?
-  geoTargeting   String[]
-  impressionGoal Int?
-  engagementGoal Float?
-  conversionGoal Int?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  userId         String
-  appId          String
-  analytics      CampaignAnalytics[]
-  app            App                 @relation(fields: [appId], references: [id], onDelete: Cascade)
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  posts          Post[]
 
-  @@map("marketing_campaigns")
-}
 
 model SocialAccount {
   id             String     @id @default(cuid())
@@ -239,260 +165,72 @@ model SocialAccount {
   isVerified     Boolean    @default(false)
   followerCount  Int?
   isActive       Boolean    @default(true)
-  accessToken    String?
-  refreshToken   String?
-  tokenExpiresAt DateTime?
   lastSyncAt     DateTime?
   syncStatus     SyncStatus @default(PENDING)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   userId         String
+  accountId      String?
   posts          Post[]
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account        Account?   @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@unique([platform, platformUserId])
+  @@index([userId])
+  @@index([platform])
   @@map("social_accounts")
 }
 
 model Post {
-  id              String             @id @default(cuid())
+  id              String        @id @default(cuid())
   content         String
   mediaUrls       String[]
   hashtags        String[]
   mentions        String[]
   scheduledFor    DateTime?
   publishedAt     DateTime?
-  status          PostStatus         @default(DRAFT)
+  status          PostStatus    @default(DRAFT)
   platform        Platform
   platformPostId  String?
   threadPosition  Int?
   parentPostId    String?
-  views           Int                @default(0)
-  likes           Int                @default(0)
-  comments        Int                @default(0)
-  shares          Int                @default(0)
-  clicks          Int                @default(0)
-  engagementRate  Float              @default(0)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  views           Int           @default(0)
+  likes           Int           @default(0)
+  comments        Int           @default(0)
+  shares          Int           @default(0)
+  clicks          Int           @default(0)
+  engagementRate  Float         @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   userId          String
   appId           String
-  campaignId      String?
   socialAccountId String
-  app             App                @relation(fields: [appId], references: [id], onDelete: Cascade)
-  campaign        MarketingCampaign? @relation(fields: [campaignId], references: [id])
-  parentPost      Post?              @relation("PostThread", fields: [parentPostId], references: [id])
-  replies         Post[]             @relation("PostThread")
-  socialAccount   SocialAccount      @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  app             App           @relation(fields: [appId], references: [id], onDelete: Cascade)
+  parentPost      Post?         @relation("PostThread", fields: [parentPostId], references: [id])
+  replies         Post[]        @relation("PostThread")
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("posts")
 }
 
-model Analytics {
-  id                 String    @id @default(cuid())
-  date               DateTime
-  impressions        Int       @default(0)
-  reach              Int       @default(0)
-  views              Int       @default(0)
-  likes              Int       @default(0)
-  comments           Int       @default(0)
-  shares             Int       @default(0)
-  clicks             Int       @default(0)
-  saves              Int       @default(0)
-  signups            Int       @default(0)
-  trials             Int       @default(0)
-  purchases          Int       @default(0)
-  revenue            Float     @default(0)
-  engagementRate     Float     @default(0)
-  clickThroughRate   Float     @default(0)
-  conversionRate     Float     @default(0)
-  costPerClick       Float?
-  costPerAcquisition Float?
-  platform           Platform?
-  source             String?
-  medium             String?
-  campaign           String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  userId             String
-  appId              String
-  postId             String?
-  app                App       @relation(fields: [appId], references: [id], onDelete: Cascade)
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([date, appId, platform])
-  @@map("analytics")
-}
 
-model CampaignAnalytics {
-  id          String            @id @default(cuid())
-  date        DateTime
-  campaignId  String
-  impressions Int               @default(0)
-  clicks      Int               @default(0)
-  conversions Int               @default(0)
-  spend       Float             @default(0)
-  revenue     Float             @default(0)
-  ctr         Float             @default(0)
-  cpc         Float             @default(0)
-  cpa         Float             @default(0)
-  roas        Float             @default(0)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  campaign    MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
-  @@unique([date, campaignId])
-  @@map("campaign_analytics")
-}
 
-model GrowthSuggestion {
-  id             String           @id @default(cuid())
-  title          String
-  description    String
-  category       GrowthCategory
-  priority       Int              @default(1)
-  effort         EffortLevel
-  impact         ImpactLevel
-  actionItems    String[]
-  estimatedROI   String?
-  timeframe      String?
-  status         SuggestionStatus @default(PENDING)
-  implementedAt  DateTime?
-  results        Json?
-  aiConfidence   Float            @default(0.8)
-  sourceAnalysis String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  appId          String
-  app            App              @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  @@map("growth_suggestions")
-}
 
-model DistributionChannel {
-  id             String      @id @default(cuid())
-  name           String
-  type           ChannelType
-  url            String?
-  description    String?
-  isActive       Boolean     @default(true)
-  traffic        Int         @default(0)
-  conversions    Int         @default(0)
-  conversionRate Float       @default(0)
-  cost           Float       @default(0)
-  settings       Json?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  appId          String
-  app            App         @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  @@map("distribution_channels")
-}
 
-model TargetAudience {
-  id               String     @id @default(cuid())
-  name             String
-  description      String?
-  ageRange         String?
-  gender           String?
-  location         String?
-  income           String?
-  occupation       String?
-  interests        String[]
-  painPoints       String[]
-  goals            String[]
-  behaviors        String[]
-  primaryPlatforms Platform[]
-  estimatedSize    Int?
-  lifetimeValue    Float?
-  acquisitionCost  Float?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  appId            String
-  app              App        @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  @@map("target_audiences")
-}
 
-model Competitor {
-  id                String       @id @default(cuid())
-  name              String
-  url               String
-  description       String?
-  category          AppCategory?
-  marketShare       Float?
-  estimatedRevenue  Float?
-  fundingStage      String?
-  teamSize          String?
-  strengths         String[]
-  weaknesses        String[]
-  features          String[]
-  pricing           Json?
-  marketingStrategy String?
-  contentStrategy   String?
-  socialPresence    Json?
-  trafficRank       Int?
-  socialFollowers   Json?
-  isMonitoring      Boolean      @default(false)
-  lastAnalyzedAt    DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  appId             String
-  app               App          @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  @@map("competitors")
-}
 
-model ContentTemplate {
-  id                 String           @id @default(cuid())
-  name               String
-  description        String?
-  category           TemplateCategory
-  structure          Json
-  variables          String[]
-  platforms          Platform[]
-  usageCount         Int              @default(0)
-  averagePerformance Float            @default(0)
-  isPublic           Boolean          @default(false)
-  createdBy          String
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
 
-  @@map("content_templates")
-}
 
-model Notification {
-  id         String           @id @default(cuid())
-  type       NotificationType
-  title      String
-  message    String
-  data       Json?
-  isRead     Boolean          @default(false)
-  isArchived Boolean          @default(false)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  userId     String
 
-  @@map("notifications")
-}
 
-model Integration {
-  id           String            @id @default(cuid())
-  name         String
-  type         IntegrationType
-  status       IntegrationStatus @default(PENDING)
-  config       Json
-  credentials  Json?
-  lastSyncAt   DateTime?
-  lastErrorAt  DateTime?
-  errorMessage String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  userId       String
 
-  @@map("integrations")
-}
 
 enum Plan {
   FREE
@@ -534,37 +272,10 @@ enum AppStatus {
   DISCONTINUED
 }
 
-enum CampaignObjective {
-  AWARENESS
-  ENGAGEMENT
-  TRAFFIC
-  LEADS
-  CONVERSIONS
-  RETENTION
-  GROWTH
-}
 
-enum CampaignStatus {
-  DRAFT
-  SCHEDULED
-  ACTIVE
-  PAUSED
-  COMPLETED
-  CANCELLED
-}
 
 enum Platform {
   TWITTER
-  LINKEDIN
-  REDDIT
-  INSTAGRAM
-  FACEBOOK
-  YOUTUBE
-  TIKTOK
-  MEDIUM
-  DEV_TO
-  HACKER_NEWS
-  PRODUCT_HUNT
 }
 
 enum PostStatus {
@@ -582,97 +293,3 @@ enum SyncStatus {
   ERROR
 }
 
-enum GrowthCategory {
-  SEO
-  CONTENT_MARKETING
-  SOCIAL_MEDIA
-  PAID_ADVERTISING
-  EMAIL_MARKETING
-  PRODUCT_OPTIMIZATION
-  USER_EXPERIENCE
-  CONVERSION_OPTIMIZATION
-  PARTNERSHIP
-  PR_OUTREACH
-  COMMUNITY_BUILDING
-  RETENTION
-}
-
-enum EffortLevel {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum ImpactLevel {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum SuggestionStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  DISMISSED
-}
-
-enum ChannelType {
-  SOCIAL_MEDIA
-  CONTENT_PLATFORM
-  APP_STORE
-  MARKETPLACE
-  DIRECTORY
-  COMMUNITY
-  PAID_ADS
-  EMAIL
-  AFFILIATE
-  PARTNERSHIP
-  PR_MEDIA
-  ORGANIC_SEARCH
-}
-
-enum TemplateCategory {
-  LAUNCH_ANNOUNCEMENT
-  FEATURE_UPDATE
-  USER_TESTIMONIAL
-  BEHIND_THE_SCENES
-  EDUCATIONAL_CONTENT
-  PROMOTIONAL
-  COMMUNITY_ENGAGEMENT
-  MILESTONE_CELEBRATION
-  PROBLEM_SOLUTION
-  COMPARISON
-}
-
-enum NotificationType {
-  POST_SCHEDULED
-  POST_PUBLISHED
-  POST_FAILED
-  CAMPAIGN_STARTED
-  CAMPAIGN_COMPLETED
-  ANALYTICS_MILESTONE
-  GROWTH_SUGGESTION
-  ACCOUNT_CONNECTED
-  ACCOUNT_EXPIRED
-  PLAN_UPGRADE
-  SYSTEM_UPDATE
-}
-
-enum IntegrationType {
-  ANALYTICS
-  EMAIL_MARKETING
-  CRM
-  PAYMENT
-  WEBHOOK
-  ZAPIER
-  SLACK
-  DISCORD
-  NOTION
-}
-
-enum IntegrationStatus {
-  PENDING
-  ACTIVE
-  ERROR
-  DISABLED
-}

@@ -7,14 +7,13 @@ import {
   Clock,
   Edit,
   Trash2,
-  Twitter,
-  Linkedin,
-  Globe,
   Eye,
   MoreHorizontal,
   Play,
-  Pause
+  Pause,
+  Loader2
 } from 'lucide-react';
+import { TwitterIcon } from '@/components/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +25,7 @@ import { format, isAfter, isBefore, addDays } from 'date-fns';
 interface Post {
   id: string;
   content: string;
-  platform: 'twitter' | 'linkedin' | 'reddit';
+  platform: 'twitter';
   scheduledAt?: Date;
   status: 'draft' | 'scheduled' | 'published';
   hashtags: string[];
@@ -39,23 +38,18 @@ interface PostSchedulerProps {
   onDelete: (postId: string) => void;
   onPublish: (post: Post) => void;
   onToggleSchedule: (postId: string) => void;
+  hasXConnection?: boolean;
+  onShowConnectX?: () => void;
 }
 
-export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSchedule }: PostSchedulerProps) {
+export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSchedule, hasXConnection, onShowConnectX }: PostSchedulerProps) {
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'draft' | 'published'>('all');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [publishingPostId, setPublishingPostId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'twitter':
-        return <Twitter className="w-4 h-4 text-blue-500" />;
-      case 'linkedin':
-        return <Linkedin className="w-4 h-4 text-blue-600" />;
-      case 'reddit':
-        return <Globe className="w-4 h-4 text-orange-500" />;
-      default:
-        return <Twitter className="w-4 h-4 text-blue-500" />;
-    }
+    return <TwitterIcon className="w-4 h-4" />;
   };
 
   const getStatusColor = (status: string) => {
@@ -247,9 +241,34 @@ export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSche
                           Edit
                         </DropdownMenuItem>
                         {post.status === 'draft' && (
-                          <DropdownMenuItem onClick={() => onPublish(post)}>
-                            <Play className="w-4 h-4 mr-2" />
-                            Publish Now
+                          <DropdownMenuItem onClick={async () => {
+                            if (!hasXConnection) {
+                              onShowConnectX?.();
+                            } else {
+                              setPublishingPostId(post.id);
+                              try {
+                                await onPublish(post);
+                                setToast({ type: 'success', message: 'Successfully posted on X!' });
+                                setTimeout(() => setToast(null), 3000);
+                              } catch (error) {
+                                setToast({ type: 'error', message: 'Failed to post on X. Please try again.' });
+                                setTimeout(() => setToast(null), 5000);
+                              } finally {
+                                setPublishingPostId(null);
+                              }
+                            }
+                          }}>
+                            {publishingPostId === post.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Publishing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Publish Now
+                              </>
+                            )}
                           </DropdownMenuItem>
                         )}
                         {post.status === 'scheduled' && (
@@ -273,6 +292,32 @@ export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSche
             ))
         )}
       </div>
+
+      {/* Toast Notifications */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
+          toast.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {toast.type === 'success' ? (
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

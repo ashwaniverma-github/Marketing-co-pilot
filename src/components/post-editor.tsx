@@ -14,7 +14,8 @@ import {
   Save,
   Send,
   ChevronDown,
-  Globe
+  Globe,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,11 +29,12 @@ import 'react-datepicker/dist/react-datepicker.css';
 interface Post {
   id: string;
   content: string;
-  platform: 'twitter' | 'linkedin' | 'reddit';
+  platform: 'twitter';
   scheduledAt?: Date;
   status: 'draft' | 'scheduled' | 'published';
   hashtags: string[];
   media?: string[];
+  platformPostId?: string;
 }
 
 interface PostEditorProps {
@@ -41,15 +43,20 @@ interface PostEditorProps {
   onClose: () => void;
   onSave: (post: Post) => void;
   onPublish?: (post: Post) => void;
+  hasXConnection?: boolean;
+  onShowConnectX?: () => void;
 }
 
-export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEditorProps) {
+export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConnection, onShowConnectX }: PostEditorProps) {
   const [content, setContent] = useState(post?.content || '');
-  const [platform, setPlatform] = useState<'twitter' | 'linkedin' | 'reddit'>(post?.platform || 'twitter');
+  const [platform, setPlatform] = useState<'twitter'>(post?.platform || 'twitter');
   const [hashtags, setHashtags] = useState<string[]>(post?.hashtags || []);
   const [newHashtag, setNewHashtag] = useState('');
   const [scheduledAt, setScheduledAt] = useState<Date | null>(post?.scheduledAt || null);
   const [status, setStatus] = useState<'draft' | 'scheduled' | 'published'>(post?.status || 'draft');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -58,8 +65,40 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
       setHashtags(post.hashtags);
       setScheduledAt(post.scheduledAt || null);
       setStatus(post.status);
+    } else {
+      // Reset form when no post is provided (new post)
+      setContent('');
+      setPlatform('twitter');
+      setHashtags([]);
+      setScheduledAt(null);
+      setStatus('draft');
     }
   }, [post]);
+
+  // Clear toast when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setToast(null);
+      setIsPublishing(false);
+      setIsLoadingContent(false);
+    }
+  }, [isOpen]);
+
+  // Ensure content updates immediately when post changes (even if modal is already open)
+  useEffect(() => {
+    if (post && isOpen) {
+      setIsLoadingContent(true);
+      // Small delay to show loading state and ensure smooth transition
+      setTimeout(() => {
+        setContent(post.content);
+        setPlatform(post.platform);
+        setHashtags(post.hashtags);
+        setScheduledAt(post.scheduledAt || null);
+        setStatus(post.status);
+        setIsLoadingContent(false);
+      }, 100);
+    }
+  }, [post, isOpen]);
 
   const handleSave = () => {
     const updatedPost: Post = {
@@ -75,6 +114,14 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
   };
 
   const handlePublish = async () => {
+    // Check if user has X connection
+    if (!hasXConnection) {
+      onShowConnectX?.();
+      return;
+    }
+
+    setIsPublishing(true);
+    
     try {
       // Post to social media
       const response = await fetch('/api/post-to-social', {
@@ -91,8 +138,15 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
       const result = await response.json();
 
       if (!response.ok) {
+        // Handle specific auth errors
+        if (result.needsAuth) {
+          onShowConnectX?.();
+          return;
+        }
         throw new Error(result.error || 'Failed to post');
       }
+
+      const tweetId: string | undefined = result?.post?.data?.id;
 
       const updatedPost: Post = {
         id: post?.id || Date.now().toString(),
@@ -100,16 +154,30 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
         platform,
         hashtags,
         status: 'published',
+        platformPostId: tweetId,
       };
       
       onPublish?.(updatedPost);
-      onClose();
       
-      // Show success message
-      alert(`Successfully posted to ${platform === 'twitter' ? 'X' : platform}!`);
+      // Show success toast
+      setToast({ type: 'success', message: 'Successfully posted on X!' });
+      
+      // Close modal after a short delay to show toast
+      setTimeout(() => {
+        onClose();
+        setToast(null);
+      }, 1500);
+      
     } catch (error) {
       console.error('Failed to publish post:', error);
-      alert(`Failed to post to ${platform === 'twitter' ? 'X' : platform}. Please try again.`);
+      setToast({ type: 'error', message: `Failed to post on X. ${error instanceof Error ? error.message : 'Please try again.'}` });
+      
+      // Auto-dismiss error toast after 5 seconds
+      setTimeout(() => {
+        setToast(null);
+      }, 5000);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -268,18 +336,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
                     <span>X (Twitter)</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPlatform('linkedin')}>
-                  <div className="flex items-center space-x-2">
-                    <Linkedin className="w-4 h-4 text-blue-600" />
-                    <span>LinkedIn</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPlatform('reddit')}>
-                  <div className="flex items-center space-x-2">
-                    <Globe className="w-4 h-4 text-orange-500" />
-                    <span>Reddit</span>
-                  </div>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -287,19 +343,28 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
           {/* Content Editor */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-3">Content</label>
-            <RichTextEditor
-              content={content}
-              onChange={setContent}
-              platform={platform}
-              maxLength={getCharacterLimit(platform)}
-              placeholder={
-                platform === 'twitter' 
-                  ? "What's happening?" 
-                  : platform === 'linkedin'
-                  ? "Share an update..."
-                  : "Share your thoughts..."
-              }
-            />
+            {isLoadingContent ? (
+              <div className="border rounded-xl bg-muted p-8 text-center min-h-[180px] flex items-center justify-center">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"></div>
+                  <span className="text-muted-foreground">Loading content...</span>
+                </div>
+              </div>
+            ) : (
+              <RichTextEditor
+                content={content}
+                onChange={setContent}
+                platform={platform}
+                maxLength={getCharacterLimit(platform)}
+                placeholder={
+                  platform === 'twitter' 
+                    ? "What's happening?" 
+                    : platform === 'linkedin'
+                    ? "Share an update..."
+                    : "Share your thoughts..."
+                }
+              />
+            )}
           </div>
 
           {/* Hashtags */}
@@ -397,15 +462,54 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish }: PostEdi
                   Schedule Post
                 </Button>
               ) : (
-                <Button onClick={handlePublish}>
-                  <Send className="w-4 h-4 mr-2" />
-                  Publish Now
+                <Button 
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  className={isPublishing ? 'opacity-70 cursor-not-allowed' : ''}
+                >
+                  {isPublishing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Publish Now
+                    </>
+                  )}
                 </Button>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
+          toast.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {toast.type === 'success' ? (
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

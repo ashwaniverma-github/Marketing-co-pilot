@@ -459,7 +459,7 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
     const scrapeQuality = Math.min(1.0, completeness + (seoScore / 100) * 0.3);
 
     // === CLEAN AND LIMIT DATA ===
-    return {
+    const result = {
       // Basic Information
       title,
       description,
@@ -506,16 +506,22 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
       httpsEnabled,
       
       // Content Analysis
-      wordCount,
-      readingTime,
-      languageDetected,
-      keywords: keywords.slice(0, 30),
-      sentiment,
+      wordCount: fullText.split(/\s+/).length,
+      readingTime: Math.ceil(fullText.split(/\s+/).length / 200),
+      languageDetected: 'en',
+      keywords: extractKeywords(fullText),
+      sentiment: 'neutral',
       
       // Business Information
-      companyInfo,
-      businessModel: detectBusinessModel(fullText),
-      industryCategory: detectIndustryCategory(fullText, title),
+      companyInfo: {
+        name: title.split(' - ')[0] || title.split(' | ')[0] || title,
+        description: description.substring(0, 200),
+        location: '',
+        teamSize: '',
+        founded: '',
+      },
+      businessModel: null,
+      industryCategory: null,
       
       // Navigation & Structure
       navigationMenu: [...new Set(navigationMenu)].slice(0, 20),
@@ -524,7 +530,7 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
       externalLinks: [],
       
       // E-commerce
-      products,
+      products: products.slice(0, 20),
       categories: [...new Set(categories)].slice(0, 20),
       paymentMethods: [...new Set(paymentMethods)],
       shippingInfo: null,
@@ -537,6 +543,8 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
       scrapeQuality,
       completeness,
     };
+
+    return result;
 
   } catch (error) {
     console.error('Scraping error:', error);
@@ -631,46 +639,4 @@ export function calculateSEOScore($: any, data: {
   return Math.min(100, score);
 }
 
-export function detectBusinessModel(text: string): string | null {
-  const lowerText = text.toLowerCase();
-  
-  if (lowerText.includes('subscription') || lowerText.includes('monthly') || lowerText.includes('annually')) {
-    return 'subscription';
-  }
-  if (lowerText.includes('freemium') || lowerText.includes('free trial')) {
-    return 'freemium';
-  }
-  if (lowerText.includes('marketplace') || lowerText.includes('commission')) {
-    return 'marketplace';
-  }
-  if (lowerText.includes('advertising') || lowerText.includes('sponsored')) {
-    return 'advertising';
-  }
-  if (lowerText.includes('one-time') || lowerText.includes('purchase')) {
-    return 'one-time-purchase';
-  }
-  if (lowerText.includes('enterprise') || lowerText.includes('custom pricing')) {
-    return 'enterprise';
-  }
-  
-  return null;
-}
 
-export function detectIndustryCategory(text: string, title: string): string | null {
-  const fullText = (text + ' ' + title).toLowerCase();
-  
-  if (fullText.includes('saas') || fullText.includes('software')) return 'SaaS';
-  if (fullText.includes('ecommerce') || fullText.includes('e-commerce') || fullText.includes('store')) return 'E-commerce';
-  if (fullText.includes('finance') || fullText.includes('fintech') || fullText.includes('payment')) return 'Finance';
-  if (fullText.includes('health') || fullText.includes('medical') || fullText.includes('fitness')) return 'Healthcare';
-  if (fullText.includes('education') || fullText.includes('learning') || fullText.includes('course')) return 'Education';
-  if (fullText.includes('marketing') || fullText.includes('analytics') || fullText.includes('advertising')) return 'Marketing';
-  if (fullText.includes('productivity') || fullText.includes('project management') || fullText.includes('collaboration')) return 'Productivity';
-  if (fullText.includes('design') || fullText.includes('creative') || fullText.includes('graphics')) return 'Design';
-  if (fullText.includes('developer') || fullText.includes('coding') || fullText.includes('api')) return 'Developer Tools';
-  if (fullText.includes('social') || fullText.includes('community') || fullText.includes('networking')) return 'Social';
-  if (fullText.includes('game') || fullText.includes('gaming') || fullText.includes('entertainment')) return 'Gaming';
-  if (fullText.includes('ai') || fullText.includes('artificial intelligence') || fullText.includes('machine learning')) return 'AI/ML';
-  
-  return null;
-}

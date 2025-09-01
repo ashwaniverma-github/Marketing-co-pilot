@@ -72,6 +72,7 @@ interface ProductKnowledgeProps {
   productName: string;
   productUrl: string;
   tagline?: string;
+  initialDbKnowledge?: any;
 }
 
 type EditableSectionKey =
@@ -83,15 +84,84 @@ type EditableSectionKey =
   | 'seoKeywords'
   | 'brandVoice';
 
-export function ProductKnowledge({ productId, productName, productUrl, tagline }: ProductKnowledgeProps) {
+function mapDbKnowledgeToUiKnowledge(dbKnowledge: any, productId: string, productName: string, productUrl: string): ProductKnowledge {
+  const basicInfo = {
+    name: productName,
+    tagline: '',
+    url: productUrl,
+    category: '',
+    targetAudience: dbKnowledge?.targetAudience || '',
+    valueProposition: dbKnowledge?.valueProposition || '',
+  };
+
+  const features = {
+    core: dbKnowledge?.keyFeatures || [],
+    secondary: [],
+    unique: dbKnowledge?.uniqueSellingPoints || [],
+  };
+
+  const marketingAngles = {
+    painPoints: dbKnowledge?.painPoints || [],
+    benefits: dbKnowledge?.benefits || [],
+    emotionalTriggers: dbKnowledge?.emotionalTriggers || [],
+    socialProof: [],
+  };
+
+  const contentThemes = {
+    educational: dbKnowledge?.contentThemes || [],
+    promotional: [],
+    behindTheScenes: [],
+    userGenerated: [],
+  };
+
+  const seoKeywords = {
+    primary: dbKnowledge?.primaryKeywords || [],
+    longTail: dbKnowledge?.longTailKeywords || [],
+    brandTerms: [
+      productName?.toLowerCase?.() || '',
+      `${productName?.toLowerCase?.() || ''} app`,
+      `${productName?.toLowerCase?.() || ''} software`,
+    ].filter(Boolean),
+  };
+
+  const brandVoice = {
+    tone: dbKnowledge?.brandTone || '',
+    personality: dbKnowledge?.brandPersonality || [],
+    language: dbKnowledge?.communicationStyle || '',
+    restrictions: dbKnowledge?.brandGuidelines?.restrictions || [],
+  };
+
+  return {
+    id: dbKnowledge?.id || Date.now().toString(),
+    productId,
+    basicInfo,
+    features,
+    competitors: { direct: [], indirect: [], advantages: [] },
+    marketingAngles,
+    contentThemes,
+    seoKeywords,
+    brandVoice,
+    createdAt: dbKnowledge?.createdAt || new Date().toISOString(),
+    lastUpdated: dbKnowledge?.updatedAt || new Date().toISOString(),
+  };
+}
+
+export function ProductKnowledge({ productId, productName, productUrl, tagline, initialDbKnowledge }: ProductKnowledgeProps) {
   const [knowledge, setKnowledge] = useState<ProductKnowledge | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editableKnowledge, setEditableKnowledge] = useState<ProductKnowledge | null>(null);
 
   useEffect(() => {
-    loadKnowledge();
-  }, [productId]);
+    if (initialDbKnowledge) {
+      const mapped = mapDbKnowledgeToUiKnowledge(initialDbKnowledge, productId, productName, productUrl);
+      setKnowledge(mapped);
+      setEditableKnowledge(mapped);
+      localStorage.setItem(`knowledge_${productId}`, JSON.stringify(mapped));
+    } else {
+      loadKnowledge();
+    }
+  }, [productId, initialDbKnowledge]);
 
   const loadKnowledge = () => {
     // Load from localStorage for now
@@ -140,17 +210,31 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
     }
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!editableKnowledge) return;
-    
+
     const updatedKnowledge = {
       ...editableKnowledge,
       lastUpdated: new Date().toISOString()
-    };
-    
-    setKnowledge(updatedKnowledge);
-    localStorage.setItem(`knowledge_${productId}`, JSON.stringify(updatedKnowledge));
-    setIsEditing(false);
+    } as ProductKnowledge;
+
+    try {
+      const resp = await fetch('/api/enhanced-analysis', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, knowledge: updatedKnowledge }),
+      });
+      if (!resp.ok) {
+        const r = await resp.json().catch(() => ({}));
+        throw new Error(r.error || 'Failed to save knowledge');
+      }
+      setKnowledge(updatedKnowledge);
+      localStorage.setItem(`knowledge_${productId}`, JSON.stringify(updatedKnowledge));
+      setIsEditing(false);
+    } catch (e) {
+      console.error('Save knowledge failed', e);
+      alert('Failed to save knowledge. Please try again.');
+    }
   };
 
   const cancelEditing = () => {
@@ -354,9 +438,9 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
               Features Analysis
             </h4>
             <div className="grid md:grid-cols-3 gap-6">
-              {renderEditableArray('features', 'core', editableKnowledge?.features.core || [], <Target className="w-4 h-4 text-blue-500" />)}
-              {renderEditableArray('features', 'secondary', editableKnowledge?.features.secondary || [], <Users className="w-4 h-4 text-green-500" />)}
-              {renderEditableArray('features', 'unique', editableKnowledge?.features.unique || [], <Lightbulb className="w-4 h-4 text-purple-500" />)}
+              {renderEditableArray('features', 'core', editableKnowledge?.features?.core || [], <Target className="w-4 h-4 text-blue-500" />)}
+              {renderEditableArray('features', 'secondary', editableKnowledge?.features?.secondary || [], <Users className="w-4 h-4 text-green-500" />)}
+              {renderEditableArray('features', 'unique', editableKnowledge?.features?.unique || [], <Lightbulb className="w-4 h-4 text-purple-500" />)}
             </div>
           </div>
 
@@ -367,10 +451,10 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
               Marketing Angles
             </h4>
             <div className="grid md:grid-cols-2 gap-6">
-              {renderEditableArray('marketingAngles', 'painPoints', editableKnowledge?.marketingAngles.painPoints || [], <Target className="w-4 h-4 text-red-500" />)}
-              {renderEditableArray('marketingAngles', 'benefits', editableKnowledge?.marketingAngles.benefits || [], <TrendingUp className="w-4 h-4 text-green-500" />)}
-              {renderEditableArray('marketingAngles', 'emotionalTriggers', editableKnowledge?.marketingAngles.emotionalTriggers || [], <Brain className="w-4 h-4 text-purple-500" />)}
-              {renderEditableArray('marketingAngles', 'socialProof', editableKnowledge?.marketingAngles.socialProof || [], <Users className="w-4 h-4 text-blue-500" />)}
+              {renderEditableArray('marketingAngles', 'painPoints', editableKnowledge?.marketingAngles?.painPoints || [], <Target className="w-4 h-4 text-red-500" />)}
+              {renderEditableArray('marketingAngles', 'benefits', editableKnowledge?.marketingAngles?.benefits || [], <TrendingUp className="w-4 h-4 text-green-500" />)}
+              {renderEditableArray('marketingAngles', 'emotionalTriggers', editableKnowledge?.marketingAngles?.emotionalTriggers || [], <Brain className="w-4 h-4 text-purple-500" />)}
+              {renderEditableArray('marketingAngles', 'socialProof', editableKnowledge?.marketingAngles?.socialProof || [], <Users className="w-4 h-4 text-blue-500" />)}
             </div>
           </div>
 
@@ -381,9 +465,9 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
               SEO Strategy
             </h4>
             <div className="grid md:grid-cols-3 gap-6">
-              {renderEditableArray('seoKeywords', 'primary', editableKnowledge?.seoKeywords.primary || [], <Target className="w-4 h-4 text-red-500" />)}
-              {renderEditableArray('seoKeywords', 'longTail', editableKnowledge?.seoKeywords.longTail || [], <TrendingUp className="w-4 h-4 text-green-500" />)}
-              {renderEditableArray('seoKeywords', 'brandTerms', editableKnowledge?.seoKeywords.brandTerms || [], <Brain className="w-4 h-4 text-purple-500" />)}
+              {renderEditableArray('seoKeywords', 'primary', editableKnowledge?.seoKeywords?.primary || [], <Target className="w-4 h-4 text-red-500" />)}
+              {renderEditableArray('seoKeywords', 'longTail', editableKnowledge?.seoKeywords?.longTail || [], <TrendingUp className="w-4 h-4 text-green-500" />)}
+              {renderEditableArray('seoKeywords', 'brandTerms', editableKnowledge?.seoKeywords?.brandTerms || [], <Brain className="w-4 h-4 text-purple-500" />)}
             </div>
           </div>
 
@@ -399,12 +483,12 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editableKnowledge?.brandVoice.tone || ''}
+                    value={editableKnowledge?.brandVoice?.tone || ''}
                     onChange={(e) => updateField('brandVoice', 'tone', e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-muted-foreground">{knowledge.brandVoice.tone}</p>
+                  <p className="text-muted-foreground">{knowledge.brandVoice?.tone || ''}</p>
                 )}
               </div>
               <div>
@@ -412,16 +496,16 @@ export function ProductKnowledge({ productId, productName, productUrl, tagline }
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editableKnowledge?.brandVoice.language || ''}
+                    value={editableKnowledge?.brandVoice?.language || ''}
                     onChange={(e) => updateField('brandVoice', 'language', e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-muted-foreground">{knowledge.brandVoice.language}</p>
+                  <p className="text-muted-foreground">{knowledge.brandVoice?.language || ''}</p>
                 )}
               </div>
               <div className="md:col-span-2">
-                {renderEditableArray('brandVoice', 'personality', editableKnowledge?.brandVoice.personality || [], <Users className="w-4 h-4 text-blue-500" />)}
+                {renderEditableArray('brandVoice', 'personality', editableKnowledge?.brandVoice?.personality || [], <Users className="w-4 h-4 text-blue-500" />)}
               </div>
             </div>
           </div>

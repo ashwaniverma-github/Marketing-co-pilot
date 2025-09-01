@@ -20,13 +20,10 @@ export async function GET(_: NextRequest) {
         status: 'ACTIVE',
       },
       include: {
-        appKnowledge: true,
+        scrapedData: true,
         _count: {
           select: {
             posts: true,
-            marketingCampaigns: true,
-            competitors: true,
-            targetAudiences: true,
           },
         },
       },
@@ -48,12 +45,10 @@ export async function GET(_: NextRequest) {
         launchDate: app.launchDate,
         createdAt: app.createdAt.toISOString(),
         updatedAt: app.updatedAt.toISOString(),
-        knowledge: app.appKnowledge,
+        scrapedData: app.scrapedData,
         stats: {
           posts: app._count.posts,
-          campaigns: app._count.marketingCampaigns,
-          competitors: app._count.competitors,
-          audiences: app._count.targetAudiences,
+          campaigns: 0,
         },
       })),
     });
@@ -93,11 +88,10 @@ export async function POST(request: NextRequest) {
         userId,
       },
       include: {
-        appKnowledge: true,
+        scrapedData: true,
         _count: {
           select: {
             posts: true,
-            marketingCampaigns: true,
           },
         },
       },
@@ -116,10 +110,10 @@ export async function POST(request: NextRequest) {
         status: app.status.toLowerCase(),
         createdAt: app.createdAt.toISOString(),
         updatedAt: app.updatedAt.toISOString(),
-        knowledge: app.appKnowledge,
+        scrapedData: app.scrapedData,
         stats: {
           posts: app._count.posts,
-          campaigns: app._count.marketingCampaigns,
+          campaigns: 0,
         },
       },
     });

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
+import { TwitterIcon } from '@/components/icons';
 import {
-  Twitter,
   Linkedin,
   Globe,
   Check,
@@ -13,6 +13,7 @@ import {
   Unlink,
   RefreshCw
 } from 'lucide-react';
+import type { SVGProps } from 'react';
 
 interface SocialAccount {
   id: string;
@@ -128,16 +129,20 @@ export function SocialConnections({ onConnect, onDisconnect, onRefresh }: Social
     }
   };
 
+  const XLogo = (props: SVGProps<SVGSVGElement>) => (
+    <TwitterIcon {...props} />
+  );
+
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'twitter':
-        return <Twitter className="w-5 h-5 text-blue-500" />;
+        return <XLogo className="w-5 h-5 text-foreground" />;
       case 'linkedin':
         return <Linkedin className="w-5 h-5 text-blue-600" />;
       case 'reddit':
         return <Globe className="w-5 h-5 text-orange-500" />;
       default:
-        return <Twitter className="w-5 h-5 text-blue-500" />;
+        return <XLogo className="w-5 h-5 text-foreground" />;
     }
   };
 
@@ -159,7 +164,7 @@ export function SocialConnections({ onConnect, onDisconnect, onRefresh }: Social
       id: 'twitter',
       name: 'X (Twitter)',
       description: 'Connect your X account to post tweets and threads directly.',
-      icon: <Twitter className="w-6 h-6 text-blue-500" />,
+      icon: <XLogo className="w-6 h-6 text-foreground" />,
       available: true
     },
     {

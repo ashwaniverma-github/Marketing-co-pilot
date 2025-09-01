@@ -10,12 +10,12 @@ import {
   Share,
   Eye,
   Calendar,
-  Twitter,
   Linkedin,
   Globe,
   ChevronDown,
   RefreshCw
 } from 'lucide-react';
+import { TwitterIcon } from '@/components/icons';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -70,95 +70,66 @@ export function AnalyticsDashboard() {
   const loadAnalytics = async () => {
     setIsLoading(true);
     try {
-      // Simulate analytics data loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 1) Sync latest metrics from X before reading analytics (best-effort)
+      try {
+        await fetch('/api/analytics/sync', { credentials: 'include' });
+      } catch {}
 
-      // Mock analytics data
-      const mockAnalytics: PostAnalytics[] = [
-        {
-          id: '1',
-          postId: 'post_1',
-          platform: 'twitter',
-          publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          content: 'Check out our new feature! 🚀 #productivity #saas',
-          metrics: {
-            views: 1250,
-            likes: 89,
-            comments: 15,
-            shares: 23,
-            clicks: 45,
-            engagement_rate: 10.2
-          },
-          reach: 1100,
-          impressions: 1250
+      // 2) Load analytics for the selected range
+      const days = timeRange === '7d' ? 7 : timeRange === '90d' ? 90 : timeRange === 'all' ? 365 : 30;
+      const res = await fetch(`/api/analytics?days=${days}`, { credentials: 'include' });
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || 'Failed to load analytics');
+      }
+
+      const ts: any[] = json.analytics?.data || [];
+      const top: any[] = json.analytics?.topPosts || [];
+      const sum = json.analytics?.summary || {};
+      const pbd = json.analytics?.platformBreakdown || [];
+
+      // Map top posts to recent posts performance
+      const recent: PostAnalytics[] = top.map((p: any) => ({
+        id: p.id,
+        postId: p.id,
+        platform: (p.platform || 'twitter') as 'twitter' | 'linkedin' | 'reddit',
+        publishedAt: p.publishedAt ? new Date(p.publishedAt) : new Date(),
+        content: p.content,
+        metrics: {
+          views: p.views || 0,
+          likes: p.likes || 0,
+          comments: p.comments || 0,
+          shares: p.shares || 0,
+          clicks: p.clicks || 0,
+          engagement_rate: typeof p.engagementRate === 'number' ? p.engagementRate : 0,
         },
-        {
-          id: '2',
-          postId: 'post_2',
-          platform: 'linkedin',
-          publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          content: 'Lessons learned building a SaaS product...',
-          metrics: {
-            views: 2340,
-            likes: 156,
-            comments: 34,
-            shares: 12,
-            clicks: 89,
-            engagement_rate: 8.6
-          },
-          reach: 2100,
-          impressions: 2340
-        },
-        {
-          id: '3',
-          postId: 'post_3',
-          platform: 'twitter',
-          publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          content: 'Pro tip: Always validate your ideas early! 💡',
-          metrics: {
-            views: 890,
-            likes: 67,
-            comments: 8,
-            shares: 15,
-            clicks: 23,
-            engagement_rate: 12.7
-          },
-          reach: 820,
-          impressions: 890
-        }
-      ];
+        reach: p.views || 0,
+        impressions: p.views || 0,
+      }));
 
-      setAnalytics(mockAnalytics);
+      setAnalytics(recent);
 
-      // Calculate summary
-      const totalViews = mockAnalytics.reduce((sum, post) => sum + post.metrics.views, 0);
-      const totalLikes = mockAnalytics.reduce((sum, post) => sum + post.metrics.likes, 0);
-      const totalComments = mockAnalytics.reduce((sum, post) => sum + post.metrics.comments, 0);
-      const totalShares = mockAnalytics.reduce((sum, post) => sum + post.metrics.shares, 0);
-      const avgEngagementRate = mockAnalytics.reduce((sum, post) => sum + post.metrics.engagement_rate, 0) / mockAnalytics.length;
-
-      const platformBreakdown = [
-        {
-          platform: 'Twitter',
-          posts: mockAnalytics.filter(p => p.platform === 'twitter').length,
-          engagement: mockAnalytics.filter(p => p.platform === 'twitter').reduce((sum, p) => sum + p.metrics.engagement_rate, 0) / mockAnalytics.filter(p => p.platform === 'twitter').length || 0
-        },
-        {
-          platform: 'LinkedIn',
-          posts: mockAnalytics.filter(p => p.platform === 'linkedin').length,
-          engagement: mockAnalytics.filter(p => p.platform === 'linkedin').reduce((sum, p) => sum + p.metrics.engagement_rate, 0) / mockAnalytics.filter(p => p.platform === 'linkedin').length || 0
-        }
-      ];
+      // Derive platform breakdown
+      const countsByPlatform: Record<string, number> = {};
+      for (const row of ts) {
+        const plat = (row.platform || 'twitter') as string;
+        countsByPlatform[plat] = (countsByPlatform[plat] || 0) + 1;
+      }
+      const platformBreakdown = pbd.map((item: any) => ({
+        platform: (item.platform || 'twitter') as string,
+        posts: countsByPlatform[item.platform] || 0,
+        engagement: item.avgEngagementRate || 0,
+      }));
 
       setSummary({
-        totalPosts: mockAnalytics.length,
-        totalViews,
-        totalLikes,
-        totalComments,
-        totalShares,
-        avgEngagementRate,
-        topPerformingPost: mockAnalytics.sort((a, b) => b.metrics.engagement_rate - a.metrics.engagement_rate)[0],
-        platformBreakdown
+        totalPosts: recent.length,
+        totalViews: sum.totalViews || 0,
+        totalLikes: sum.totalLikes || 0,
+        totalComments: sum.totalComments || 0,
+        totalShares: sum.totalShares || 0,
+        avgEngagementRate: sum.avgEngagementRate || 0,
+        topPerformingPost: recent.sort((a, b) => b.metrics.engagement_rate - a.metrics.engagement_rate)[0] || null,
+        platformBreakdown,
       });
 
     } catch (error) {
@@ -171,13 +142,13 @@ export function AnalyticsDashboard() {
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'twitter':
-        return <Twitter className="w-4 h-4 text-blue-500" />;
+        return <TwitterIcon className="w-4 h-4" />;
       case 'linkedin':
         return <Linkedin className="w-4 h-4 text-blue-600" />;
       case 'reddit':
         return <Globe className="w-4 h-4 text-orange-500" />;
       default:
-        return <Twitter className="w-4 h-4 text-blue-500" />;
+        return <TwitterIcon className="w-4 h-4" />;
     }
   };
 

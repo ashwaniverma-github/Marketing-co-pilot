@@ -40,13 +40,7 @@ export async function GET(request: NextRequest) {
             displayName: true,
           },
         },
-        campaign: {
-          select: {
-            id: true,
-            name: true,
-            objective: true,
-          },
-        },
+
       },
       orderBy: [
         { scheduledFor: 'asc' },
@@ -78,7 +72,6 @@ export async function GET(request: NextRequest) {
         updatedAt: post.updatedAt.toISOString(),
         app: post.app,
         socialAccount: post.socialAccount,
-        campaign: post.campaign,
       })),
     });
 
@@ -107,7 +100,8 @@ export async function POST(request: NextRequest) {
       appId, 
       socialAccountId, 
       scheduledFor, 
-      status = 'DRAFT' 
+      status = 'DRAFT',
+      platformPostId
     } = body;
 
     if (!content || !platform || !appId) {
@@ -145,7 +139,7 @@ export async function POST(request: NextRequest) {
           // Try to bootstrap a SocialAccount from NextAuth account
           const oauthAccount = await db.account.findFirst({
             where: { userId, provider: 'twitter' },
-            select: { providerAccountId: true, access_token: true },
+            select: { id: true, providerAccountId: true, access_token: true },
           });
 
           if (oauthAccount?.providerAccountId) {
@@ -157,8 +151,8 @@ export async function POST(request: NextRequest) {
                 displayName: 'Twitter',
                 isVerified: false,
                 isActive: true,
-                accessToken: oauthAccount.access_token || undefined,
                 userId,
+                accountId: oauthAccount.id,
               },
             });
             socialAccount = created as any;
@@ -188,6 +182,7 @@ export async function POST(request: NextRequest) {
         userId,
         appId,
         socialAccountId: finalSocialAccountId,
+        platformPostId: platformPostId || null,
       },
       include: {
         app: {

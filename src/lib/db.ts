@@ -1,4 +1,4 @@
-import { PrismaClient, type Platform } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log: process.env.NODE_ENV === 'development' ? [ 'error', 'warn'] : ['error'],
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
@@ -27,7 +27,6 @@ export const userHelpers = {
         socialAccounts: {
           where: { isActive: true },
         },
-        userPreferences: true,
       },
     });
   },
@@ -36,17 +35,6 @@ export const userHelpers = {
     return db.user.create({
       data: {
         ...data,
-        userPreferences: {
-          create: {
-            emailNotifications: true,
-            pushNotifications: true,
-            weeklyReports: true,
-            aiSuggestions: true,
-          },
-        },
-      },
-      include: {
-        userPreferences: true,
       },
     });
   },
@@ -54,18 +42,15 @@ export const userHelpers = {
 
 // App operations
 export const appHelpers = {
-  async findWithKnowledge(appId: string) {
+  async findWithScrapedData(appId: string) {
     return db.app.findUnique({
       where: { id: appId },
       include: {
-        appKnowledge: true,
+        scrapedData: true,
         user: true,
         _count: {
           select: {
             posts: true,
-            marketingCampaigns: true,
-            competitors: true,
-            targetAudiences: true,
           },
         },
       },
@@ -79,30 +64,14 @@ export const appHelpers = {
         status: 'ACTIVE',
       },
       include: {
-        appKnowledge: true,
+        scrapedData: true,
         _count: {
           select: {
             posts: true,
-            marketingCampaigns: true,
           },
         },
       },
       orderBy: { updatedAt: 'desc' },
-    });
-  },
-
-  async updateKnowledge(appId: string, knowledge: any) {
-    return db.appKnowledge.upsert({
-      where: { appId },
-      update: {
-        ...knowledge,
-        lastAnalyzedAt: new Date(),
-      },
-      create: {
-        appId,
-        ...knowledge,
-        lastAnalyzedAt: new Date(),
-      },
     });
   },
 };
@@ -146,12 +115,6 @@ export const postHelpers = {
             displayName: true,
           },
         },
-        campaign: {
-          select: {
-            name: true,
-            objective: true,
-          },
-        },
       },
       orderBy: { createdAt: 'desc' },
       take: options?.limit || 50,
@@ -179,162 +142,6 @@ export const postHelpers = {
   },
 };
 
-// Analytics operations
-export const analyticsHelpers = {
-  async getAppPerformance(appId: string, days = 30) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    return db.analytics.findMany({
-      where: {
-        appId,
-        date: {
-          gte: startDate,
-        },
-      },
-      orderBy: { date: 'desc' },
-    });
-  },
-
-  async getPlatformComparison(appId: string, days = 30) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    return db.analytics.groupBy({
-      by: ['platform'],
-      where: {
-        appId,
-        date: {
-          gte: startDate,
-        },
-        platform: {
-          not: null,
-        },
-      },
-      _sum: {
-        impressions: true,
-        views: true,
-        likes: true,
-        comments: true,
-        shares: true,
-        clicks: true,
-      },
-      _avg: {
-        engagementRate: true,
-        clickThroughRate: true,
-      },
-    });
-  },
-
-  async recordMetrics(data: {
-    appId: string;
-    userId: string;
-    date: Date;
-    platform: Platform;
-    impressions?: number;
-    views?: number;
-    likes?: number;
-    comments?: number;
-    shares?: number;
-    clicks?: number;
-    conversions?: number;
-  }) {
-    const engagementRate = data.views ? 
-      ((data.likes || 0) + (data.comments || 0) + (data.shares || 0)) / data.views * 100 : 0;
-    
-    const clickThroughRate = data.impressions ? 
-      (data.clicks || 0) / data.impressions * 100 : 0;
-
-    return db.analytics.upsert({
-      where: {
-        date_appId_platform: {
-          date: data.date,
-          appId: data.appId,
-          platform: data.platform,
-        },
-      },
-      update: {
-        impressions: { increment: data.impressions || 0 },
-        views: { increment: data.views || 0 },
-        likes: { increment: data.likes || 0 },
-        comments: { increment: data.comments || 0 },
-        shares: { increment: data.shares || 0 },
-        clicks: { increment: data.clicks || 0 },
-        signups: { increment: data.conversions || 0 },
-        engagementRate,
-        clickThroughRate,
-      },
-      create: {
-        ...data,
-        platform: data.platform,
-        engagementRate,
-        clickThroughRate,
-      },
-    });
-  },
-};
-
-// Campaign operations
-export const campaignHelpers = {
-  async findActive(userId: string) {
-    return db.marketingCampaign.findMany({
-      where: {
-        userId,
-        status: 'ACTIVE',
-      },
-      include: {
-        app: {
-          select: {
-            name: true,
-            category: true,
-          },
-        },
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
-      },
-      orderBy: { startDate: 'desc' },
-    });
-  },
-
-  async getPerformance(campaignId: string) {
-    return db.campaignAnalytics.findMany({
-      where: { campaignId },
-      orderBy: { date: 'desc' },
-      take: 30,
-    });
-  },
-};
-
-// Growth suggestions operations
-export const growthHelpers = {
-  async findPending(appId: string) {
-    return db.growthSuggestion.findMany({
-      where: {
-        appId,
-        status: 'PENDING',
-      },
-      orderBy: [
-        { priority: 'desc' },
-        { aiConfidence: 'desc' },
-      ],
-    });
-  },
-
-  async markImplemented(suggestionId: string, results?: any) {
-    return db.growthSuggestion.update({
-      where: { id: suggestionId },
-      data: {
-        status: 'COMPLETED',
-        implementedAt: new Date(),
-        results,
-      },
-    });
-  },
-};
-
 // Social account operations
 export const socialHelpers = {
   async findByUser(userId: string, activeOnly = true) {
@@ -352,10 +159,28 @@ export const socialHelpers = {
     refreshToken?: string;
     tokenExpiresAt?: Date;
   }) {
+    // Find the SocialAccount to get the linked Account
+    const socialAccount = await db.socialAccount.findUnique({
+      where: { id: accountId },
+      include: { account: true }
+    });
+
+    if (socialAccount?.accountId) {
+      // Update tokens in the Account table
+      await db.account.update({
+        where: { id: socialAccount.accountId },
+        data: {
+          access_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken,
+          expires_at: tokens.tokenExpiresAt ? Math.floor(tokens.tokenExpiresAt.getTime() / 1000) : null,
+        },
+      });
+    }
+
+    // Update sync status in SocialAccount
     return db.socialAccount.update({
       where: { id: accountId },
       data: {
-        ...tokens,
         lastSyncAt: new Date(),
         syncStatus: 'SUCCESS',
       },

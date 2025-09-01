@@ -160,4 +160,27 @@ select:focus {
   body {
     @apply bg-background text-foreground;
   }
+  /* Make interactive controls show pointer; disabled show not-allowed */
+  a[href],
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  label,
+  select,
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  [disabled],
+  [aria-disabled="true"],
+  [role="button"][aria-disabled="true"],
+  a[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
