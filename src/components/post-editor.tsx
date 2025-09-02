@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { eventBus, EVENTS } from '@/lib/event-bus';
 import { RichTextEditor } from './ui/rich-text-editor';
+import { TweetCardEditor } from './ui/tweet-card-editor';
 import { Button } from './ui/button';
 import {
   Calendar,
@@ -336,7 +337,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
               <DropdownMenuContent className="w-full">
                 <DropdownMenuItem onClick={() => setPlatform('twitter')}>
                   <div className="flex items-center space-x-2">
-                    <Twitter className="w-4 h-4 text-blue-500" />
+                    
                     <span>X (Twitter)</span>
                   </div>
                 </DropdownMenuItem>
@@ -354,6 +355,13 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                   <span className="text-muted-foreground">Loading content...</span>
                 </div>
               </div>
+            ) : platform === 'twitter' ? (
+              <TweetCardEditor
+                content={content}
+                onChange={setContent}
+                maxLength={getCharacterLimit(platform)}
+                placeholder="What's happening?"
+              />
             ) : (
               <RichTextEditor
                 content={content}
@@ -361,9 +369,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                 platform={platform}
                 maxLength={getCharacterLimit(platform)}
                 placeholder={
-                  platform === 'twitter' 
-                    ? "What's happening?" 
-                    : platform === 'linkedin'
+                  platform === 'linkedin'
                     ? "Share an update..."
                     : "Share your thoughts..."
                 }
