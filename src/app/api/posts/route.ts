@@ -85,6 +85,56 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const userId = await getAuthenticatedUser();
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get('id');
+
+    if (!postId) {
+      return NextResponse.json(
+        { error: 'Post ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // First check if post exists and belongs to the user
+    const post = await db.post.findFirst({
+      where: {
+        id: postId,
+        userId,
+      },
+    });
+
+    if (!post) {
+      return NextResponse.json(
+        { error: 'Post not found or not authorized to delete' },
+        { status: 404 }
+      );
+    }
+
+    // Delete the post
+    await db.post.delete({
+      where: {
+        id: postId,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Post deleted successfully',
+    });
+
+  } catch (error) {
+    const isAuth = (error as Error)?.message === 'Not authenticated';
+    if (isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    console.error('Delete post error:', error);
+    return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const userId = await getAuthenticatedUser();

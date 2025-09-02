@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { eventBus, EVENTS } from '@/lib/event-bus';
 import { RichTextEditor } from './ui/rich-text-editor';
 import { Button } from './ui/button';
 import {
@@ -158,6 +159,9 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       };
       
       onPublish?.(updatedPost);
+      
+      // Emit event that a tweet was posted (with the content for identification)
+      eventBus.emit(EVENTS.TWEET_POSTED, content);
       
       // Show success toast
       setToast({ type: 'success', message: 'Successfully posted on X!' });

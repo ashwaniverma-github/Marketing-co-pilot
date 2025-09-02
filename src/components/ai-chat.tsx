@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { TwitterIcon, CopyIcon, CheckIcon } from './icons';
 import { Forward, Edit } from 'lucide-react';
+import { eventBus, EVENTS } from '@/lib/event-bus';
 
 interface AiChatProps {
   productId: string;
@@ -15,7 +16,7 @@ interface AiChatProps {
     xUsername?: string | null;
     xVerified?: boolean;
   };
-  onOpenEditor?: (content: string) => void;
+  onOpenEditor?: (content: string, onPostSuccess?: () => void) => void;
 }
 
 type ChatRole = 'user' | 'assistant';
@@ -30,6 +31,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const [typingMessage, setTypingMessage] = useState<string>('');
   const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log userProfile data
   useEffect(() => {
@@ -48,7 +50,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     
     // Reset textarea height after sending
     if (textareaRef.current) {
-      textareaRef.current.style.height = '160px';
+      textareaRef.current.style.height = '60px';
     }
     try {
       const res = await fetch('/api/chat', {
@@ -108,18 +110,18 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const autoResizeTextarea = () => {
     if (textareaRef.current) {
       // Reset to minimum height first to properly measure content
-      textareaRef.current.style.height = '160px';
+      textareaRef.current.style.height = '60px';
       
       // If there's no content, keep minimum height
       if (!input.trim()) {
-        textareaRef.current.style.height = '160px';
+        textareaRef.current.style.height = '60px';
         return;
       }
       
       // Calculate new height based on content
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 400; // Maximum height before scrolling
-      const minHeight = 160; // Minimum height (h-40)
+      const maxHeight = 120; // Maximum height before scrolling
+      const minHeight = 60; // Minimum height
       const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -128,6 +130,34 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   useEffect(() => {
     autoResizeTextarea();
   }, [input]);
+  
+  // Scroll to bottom whenever messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  // Auto-scroll when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading, isTyping]);
+  
+  // Listen for tweet posted events
+  useEffect(() => {
+    // Handler for when a tweet is posted
+    const handleTweetPosted = (tweetContent: string) => {
+      console.log('Tweet posted event received:', tweetContent);
+      // Remove the tweet from messages
+      handleDeleteTweet(tweetContent);
+    };
+    
+    // Subscribe to tweet posted events
+    eventBus.on(EVENTS.TWEET_POSTED, handleTweetPosted);
+    
+    // Cleanup: unsubscribe when component unmounts
+    return () => {
+      eventBus.off(EVENTS.TWEET_POSTED, handleTweetPosted);
+    };
+  }, [messages]); // Re-subscribe when messages change
 
   const formatContent = (content: string) => {
     // First handle markdown links [text](url)
@@ -189,6 +219,13 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     }, 25); // Slightly faster for better UX
   };
 
+  // Function to handle tweet deletion
+  const handleDeleteTweet = (tweetContent: string) => {
+    // Filter out the tweet with the matching content
+    const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
+    setMessages(updatedMessages);
+  };
+
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
     <div className="bg-card border border-gray-300 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
       <div className="flex items-start space-x-3 pt-2">
@@ -208,27 +245,27 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
           )}
         </div>
         <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <span className="font-semibold text-foreground">
-                  {userProfile?.name || 'User'}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold text-foreground">
+                {userProfile?.name || 'User'}
+              </span>
+              {userProfile?.xVerified && (
+                <span className="text-blue-500">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.818.915-3.474 2.25c-.415-.166-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.656 1.335 1.964 2.25 3.474 2.25s2.818-.915 3.474-2.25c.415.164.865.25 1.335.25 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/>
+                  </svg>
                 </span>
-                {userProfile?.xVerified && (
-                  <span className="text-blue-500">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.818.915-3.474 2.25c-.415-.166-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.656 1.335 1.964 2.25 3.474 2.25s2.818-.915 3.474-2.25c.415.164.865.25 1.335.25 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/>
-                    </svg>
-                  </span>
+              )}
+              
+              <span className="text-muted-foreground text-sm">
+                {userProfile?.xUsername ? (
+                  <>@{userProfile.xUsername}</>
+                ) : (
+                  <span className="text-muted-foreground/60">Connect X to customize</span>
                 )}
-                
-                <span className="text-muted-foreground text-sm">
-                  {userProfile?.xUsername ? (
-                    <>@{userProfile.xUsername}</>
-                  ) : (
-                    <span className="text-muted-foreground/60">Connect X to customize</span>
-                  )}
-                </span>
-              </div>
+              </span>
+            </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => handleCopyTweet(content)}
@@ -238,8 +275,8 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
                 <CopyIcon className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
               <button
-                onClick={() => onOpenEditor?.(content)}
-                className="px-3 py-1.5  rounded-lg transition-colors flex items-center space-x-2 transform"
+                onClick={() => onOpenEditor?.(content, () => handleDeleteTweet(content))}
+                className="px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-2 transform"
                 title="Open in Editor"
               >
                 <Edit className="w-3.5 h-3.5" />
@@ -248,116 +285,148 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
             </div>
           </div>
           <div className="text-foreground whitespace-pre-wrap break-words leading-relaxed">{formatContent(content)}</div>
+          
+          {/* Delete button in bottom right corner */}
+          <button
+            onClick={() => handleDeleteTweet(content)}
+            className="absolute bottom-3 right-3 p-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-full transition-colors text-red-600 dark:text-red-400"
+            title="Delete tweet"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" x2="10" y1="11" y2="17" />
+              <line x1="14" x2="14" y1="11" y2="17" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="">
-      <h3 className="text-2xl text-center font-semibold text-foreground mb-12">What's on your mind today ?</h3>
+    <div className="relative h-[calc(100vh-7rem)] flex flex-col">
+      {/* Only show the welcome message when there are no messages */}
+      {messages.length === 0 && (
+        <h3 className="text-4xl font-serif text-center  text-foreground pt-16">What's on your mind today?</h3>
+      )}
       
-      {/* Messages Section - Above input (normal AI responses and all user messages) */}
-      <div className="space-y-3 max-h-[480px] overflow-y-auto mb-4">
-        {messages.map((m, i) => {
-          // Skip tweet messages as they're displayed below
-          if (m.isTweet) return null;
-          
-          // Check if this is the most recent AI response and should show typing effect
-          const isLatestAIResponse = m.role === 'assistant' && i === messages.length - 1 && !m.isTweet;
-          const shouldShowTyping = isLatestAIResponse && isTyping;
-          
-          return (
-            <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-              <div className={`inline-block px-3 py-3 rounded-2xl  max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'}`}>
-                <div className="whitespace-pre-wrap break-words">
-                  {m.role === 'user' ? m.content : (
-                    shouldShowTyping ? (
-                      <span>
-                        {typingMessage}
-                        <span className="animate-pulse">|</span>
-                      </span>
-                    ) : (
-                      formatContent(m.content)
-                    )
-                  )}
+      {/* Content Area (Messages and Tweet Cards) - Scrollable */}
+      {messages.length > 0 && (
+        <div className="flex-1 w-4/5 mx-auto overflow-auto pb-32" style={{ height: 'calc(100vh - 20rem)' }}>
+          {/* Regular Messages Section */}
+          <div className="space-y-3 mb-6">
+            {messages.map((m, i) => {
+              // Skip tweet messages as they're displayed separately
+              if (m.isTweet) return null;
+              
+              // Check if this is the most recent AI response and should show typing effect
+              const isLatestAIResponse = m.role === 'assistant' && i === messages.length - 1 && !m.isTweet;
+              const shouldShowTyping = isLatestAIResponse && isTyping;
+              
+              return (
+                <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
+                  <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'}`}>
+                    <div className="whitespace-pre-wrap break-words">
+                      {m.role === 'user' ? m.content : (
+                        shouldShowTyping ? (
+                          <span>
+                            {typingMessage}
+                            <span className="animate-pulse">|</span>
+                          </span>
+                        ) : (
+                          formatContent(m.content)
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {loading && (
+              <div className="text-left">
+                <div className="inline-block px-3 py-2 rounded-lg border bg-muted text-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"></div>
+                    <span>AI is thinking...</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-        
-        {loading && (
-          <div className="text-left">
-            <div className="inline-block px-3 py-2 rounded-lg border bg-muted text-foreground">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"></div>
-                <span>AI is thinking...</span>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Typing indicator for normal AI responses */}
-        {isTyping && !loading && (
-          <div className="text-left">
-            <div className="inline-block px-3 py-3 rounded-2xl border bg-muted text-foreground max-w-[80%]">
-              <div className="flex items-center space-x-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            )}
+            
+            {/* Typing indicator for normal AI responses */}
+            {isTyping && !loading && (
+              <div className="text-left">
+                <div className="inline-block px-3 py-3 rounded-2xl border bg-muted text-foreground max-w-[80%]">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">AI is typing...</span>
+                  </div>
                 </div>
-                <span className="text-sm text-muted-foreground">AI is typing...</span>
               </div>
-            </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Input Section */}
-      <div className="mb-6">
-        <div className="p-4">
-          <div className="relative  ">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !loading) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder={`Ask about ${productName}...`}
-              className="w-full  min-h-40 pr-12 pl-4 py-3 bg-background border-2 border-cyan-950 rounded-2xl focus:outline-none focus:ring-0 focus:border-4 focus:border-cyan-950 focus:shadow-none transition-all resize-none"
-              style={{ 
-                outline: 'none', 
-                boxShadow: 'none',
-                borderColor: '#164e63',
-                verticalAlign: 'middle',
-                textAlign: 'start',
-                paddingTop: '3.5rem',
-                height: '160px'
-              }}
-            />
-            <button
-              onClick={send}
-              disabled={loading || !input.trim()}
-              className="absolute right-2 bottom-2 p-2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Send"
-            >
-              {loading ? (
-                <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full"></div>
-              ) : (
-                <Forward className="w-10 h-10 text-white bg-cyan-950 rounded-xl   p-2 font-bold" />
-              )}
-            </button>
+          {/* Tweet Cards Section - Now above the input area */}
+          {messages.filter(m => m.isTweet).length > 0 && (
+            <div className="space-y-6 mb-4">
+              {/* Group tweets by user query */}
+              {(() => {
+                const tweetMessages = messages.filter(m => m.isTweet);
+                const groups: ChatMessage[][] = [];
+                let currentGroup: ChatMessage[] = [];
+                
+                tweetMessages.forEach((tweet, i) => {
+                  currentGroup.push(tweet);
+                  // Check if this is the last tweet or if the next message would be from a new query
+                  const nextTweetIndex = messages.findIndex(m => m === tweet) + 1;
+                  const nextMessage = messages[nextTweetIndex];
+                  
+                  if (!nextMessage || nextMessage.role === 'user' || currentGroup.length >= 4) {
+                    groups.push([...currentGroup]);
+                    currentGroup = [];
+                  }
+                });
+                
+                return groups.map((tweetGroup, groupIndex) => (
+                  <div key={`tweet-group-${groupIndex}`} className="space-y-4">
+                    {tweetGroup.length > 1 && (
+                      <div className="flex items-center justify-center space-x-2 mb-4">
+                        <TwitterIcon className="w-5 h-5" />
+                        <h4 className="text-lg font-semibold text-foreground">
+                          Choose your favorite tweet
+                        </h4>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {tweetGroup.map((tweet, tweetIndex) => (
+                        <TweetCard 
+                          key={`tweet-${groupIndex}-${tweetIndex}`} 
+                          content={tweet.content} 
+                          index={tweetGroup.length > 1 ? tweetIndex : undefined}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ));
+                          })()}
           </div>
-        </div>
-        
-        {/* Tweet Mode Toggle - Always visible */}
-        <div className="px-4 pb-2">
+        )}
+        {/* Invisible element to scroll to */}
+        <div ref={messagesEndRef} />
+      </div>
+      )}
+
+      {/* Input Area - Positioned based on conversation state */}
+      <div className={`${messages.length === 0 ? 'flex flex-col justify-center flex-1 w-4/5 mx-auto' : ' w-4/5 mx-auto absolute bottom-0 left-0 right-0'} bg-background`}>
+        {/* Tweet Mode Toggle */}
+        <div className="px-4 pt-2">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setTweetMode(!tweetMode)}
@@ -375,54 +444,46 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
             )}
           </div>
         </div>
-      </div>
-
-      {/* Tweet Cards Section - Below input (only tweet responses) */}
-      {messages.filter(m => m.isTweet).length > 0 && (
-        <div className="space-y-4 max-h-[600px] overflow-y-auto">
-          
-          {/* Group tweets by user query */}
-          {(() => {
-            const tweetMessages = messages.filter(m => m.isTweet);
-            const groups: ChatMessage[][] = [];
-            let currentGroup: ChatMessage[] = [];
-            
-            tweetMessages.forEach((tweet, i) => {
-              currentGroup.push(tweet);
-              // Check if this is the last tweet or if the next message would be from a new query
-              const nextTweetIndex = messages.findIndex(m => m === tweet) + 1;
-              const nextMessage = messages[nextTweetIndex];
-              
-              if (!nextMessage || nextMessage.role === 'user' || currentGroup.length >= 4) {
-                groups.push([...currentGroup]);
-                currentGroup = [];
-              }
-            });
-            
-            return groups.map((tweetGroup, groupIndex) => (
-              <div key={`tweet-group-${groupIndex}`} className="space-y-4">
-                {tweetGroup.length > 1 && (
-                  <div className="flex items-center justify-center space-x-2 mb-4">
-                    <TwitterIcon className="w-5 h-5" />
-                    <h4 className="text-lg font-semibold text-foreground">
-                      Choose your favorite tweet
-                    </h4>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {tweetGroup.map((tweet, tweetIndex) => (
-                    <TweetCard 
-                      key={`tweet-${groupIndex}-${tweetIndex}`} 
-                      content={tweet.content} 
-                      index={tweetGroup.length > 1 ? tweetIndex : undefined}
-                    />
-                  ))}
-                </div>
-              </div>
-            ));
-          })()}
+        
+        {/* Input Textarea */}
+        <div className="mx-4 pt-4 pb-2">
+          <div className="relative flex">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !loading) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={`Ask about ${productName}...`}
+              className=" w-full px-8 py-3 bg-background border-2 border-cyan-950 rounded-full focus:outline-none focus:ring-0 focus:border-4 focus:border-cyan-950 focus:shadow-none transition-all resize-none"
+              style={{ 
+                outline: 'none', 
+                boxShadow: 'none',
+                borderColor: '#164e63',
+                verticalAlign: 'middle',
+                textAlign: 'start',
+                height: '60px'
+              }}
+            />
+            <button
+              onClick={send}
+              disabled={loading || !input.trim()}
+              className="absolute right-6 bottom-2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              aria-label="Send"
+            >
+              {loading ? (
+                <div className="animate-spin w-10 h-10 border-2 border-current border-t-transparent rounded-full flex items-center justify-center"></div>
+              ) : (
+                <Forward className="w-10 h-10 text-white bg-cyan-950 rounded-xl p-2 font-bold" />
+              )}
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Toast Notification */}
       {showToast && (

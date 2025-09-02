@@ -2,30 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut, signIn } from 'next-auth/react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { useSession, signIn } from 'next-auth/react';
 import { PostEditor } from '@/components/post-editor';
 import { PostScheduler } from '@/components/post-scheduler';
-// Removed advanced dashboards and knowledge viewers for simplified MVP
 import { AiChat } from '@/components/ai-chat';
 import { ConnectXModal } from '@/components/connect-x-modal';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
+import { Navbar } from '@/components/dashboard/Navbar';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 import {
   ContentIcon,
   PlusIcon,
   SparklesIcon,
-  CloseIcon,
-  ChevronDownIcon,
-  ExternalLinkIcon,
-  CheckIcon,
   TwitterIcon,
-  MenuIcon
+  CloseIcon
 } from '@/components/icons';
 
 interface Product {
@@ -58,6 +48,7 @@ interface Post {
   status: 'draft' | 'scheduled' | 'published';
   hashtags: string[];
   media?: string[];
+  onPostSuccess?: () => void;
 }
 
 
@@ -242,7 +233,9 @@ export default function DashboardClient() {
   
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [activeTab, setActiveTab] = useState<'content' | 'chat'>('content');
+  // Define tab type to match components
+  type TabId = 'content' | 'chat';
+  const [activeTab, setActiveTab] = useState<TabId>('content');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -254,6 +247,8 @@ export default function DashboardClient() {
   const [showPostEditor, setShowPostEditor] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [showConnectXModal, setShowConnectXModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   
   // Loading states
   const [isLoadingApps, setIsLoadingApps] = useState(false);
@@ -447,6 +442,11 @@ export default function DashboardClient() {
     try {
       // Save once with whatever we have (including platformPostId if available)
       await handleSavePost({ ...post, status: 'published' });
+      
+      // Call onPostSuccess callback if it exists
+      if (post.onPostSuccess && typeof post.onPostSuccess === 'function') {
+        post.onPostSuccess();
+      }
     } catch (error) {
       console.error('Failed to publish post:', error);
       alert('Failed to publish post. Please try again.');
@@ -458,11 +458,33 @@ export default function DashboardClient() {
     setShowPostEditor(true);
   };
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = (postId: string) => {
+    // Set the post ID to delete and show the confirmation modal
+    setPostToDelete(postId);
+    setShowDeleteModal(true);
+  };
+  
+  const confirmDeletePost = async () => {
+    if (!postToDelete) return;
+    
     try {
-      // In a real implementation, you'd have a DELETE endpoint
-      // For now, we'll just reload the posts
-      await loadPosts();
+      // Call DELETE endpoint to remove the post
+      const response = await fetch(`/api/posts?id=${postToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete post');
+      }
+      
+      // Remove the post from local state
+      setPosts(posts.filter(p => p.id !== postToDelete));
+      
+      console.log('Post deleted successfully');
+      
+      // Reset the postToDelete state
+      setPostToDelete(null);
     } catch (error) {
       console.error('Failed to delete post:', error);
       alert('Failed to delete post. Please try again.');
@@ -483,8 +505,8 @@ export default function DashboardClient() {
 
 
   const tabs = [
-    { id: 'content', name: 'Content', icon: ContentIcon },
-    { id: 'chat', name: 'Chat', icon: SparklesIcon },
+    { id: 'content' as const, name: 'Content', icon: ContentIcon },
+    { id: 'chat' as const, name: 'Chat', icon: SparklesIcon },
   ];
 
   const getPlatformIcon = (platform: string) => {
@@ -518,168 +540,31 @@ export default function DashboardClient() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Unified Top Bar (contains sidebar toggle, product selector, theme + profile) */}
-      <div className="bg-gray-200 dark:bg-card border-b px-6 py-3 sticky top-0 z-40">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Sidebar Toggle - Always Visible */}
-            <button
-              onClick={toggleSidebar}
-              className="flex p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <MenuIcon className="w-5 h-5" />
-            </button>
-            <span className="font-bold text-foreground">Marketing Co-Pilot</span>
-            
-            {/* Product Selector - Only when products exist */}
-            {products.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center space-x-2 bg-muted hover:bg-muted/80 border border-border rounded-lg px-3 py-2 transition-all min-w-[160px]">
-                    <span className="font-medium text-foreground text-sm truncate">
-                      {selectedProduct?.name}
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {products.map((product) => (
-                    <DropdownMenuItem
-                      key={product.id}
-                      onClick={() => setSelectedProduct(product)}
-                      className="flex items-center justify-between px-3 py-2 cursor-pointer"
-                    >
-                      <span className="font-medium  text-foreground truncate">{product.name}</span>
-                      {selectedProduct?.id === product.id && (
-                        <CheckIcon className="w-4 h-4 text-foreground flex-shrink-0" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setShowAddProductModal(true)}
-                    className="flex items-center space-x-2 px-3 py-2 cursor-pointer"
-                  >
-                    <PlusIcon className="w-4 h-4" />
-                    <span className="font-medium">Add Product</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            
-            {/* Add Product Button - When no products */}
-            {products.length === 0 && (
-              <button
-                onClick={() => setShowAddProductModal(true)}
-                className="flex items-center space-x-2  text-background px-4 py-1.5 rounded-lg hover:bg-foreground/90 font-medium transition-all"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Add Your First Product</span>
-              </button>
-            )}
-          </div>
-          {/* Right actions: theme + profile */}
-          <div className="hidden sm:flex items-center space-x-2">
-            <ThemeToggle />
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-9 h-9 bg-foreground rounded-xl flex items-center justify-center text-background font-medium text-sm hover:bg-foreground/90 transition-all">
-                    {user.name?.[0]?.toUpperCase() || 'U'}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="font-medium">
-                    {user.name}
-                  </DropdownMenuItem>
-                  {user.email && (
-                    <DropdownMenuItem className="text-muted-foreground text-sm">
-                      {user.email}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/login' })} className="text-red-600 dark:text-red-400">
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Navbar Component */}
+      <Navbar 
+        sidebarCollapsed={sidebarCollapsed}
+        toggleSidebar={toggleSidebar}
+        products={products}
+        selectedProduct={selectedProduct}
+        setSelectedProduct={setSelectedProduct}
+        setShowAddProductModal={setShowAddProductModal}
+      />
 
-      {/* Mobile Tab Navigation (sticky below unified bar) */}
-      <div className="lg:hidden bg-gray-100 dark:bg-card border-b sticky top-[3.5rem] z-20">
-        <div className="flex overflow-x-auto px-4 py-2">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Mobile Tabs Navigation removed - using unified sidebar for all devices */}
 
-      {/* Sidebar (fixed below unified bar) */}
-      <aside className={`hidden lg:block fixed left-0 top-[4.1rem] bg-gray-200 dark:bg-card border-r h-[calc(100vh-3.5rem)] z-30 overflow-y-auto transition-all duration-300 ${
-        sidebarCollapsed ? 'w-16' : 'w-62'
-      }`}>
-        <nav className="p-4">
-          <div className="space-y-1">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'space-x-3 px-4'} py-3 rounded-lg text-left font-medium transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                  title={sidebarCollapsed ? tab.name : undefined}
-                >
-                  <Icon className={activeTab === tab.id ? 'w-5 h-5 text-background' : 'w-5 h-5'} />
-                  {!sidebarCollapsed && <span>{tab.name}</span>}
-                </button>
-              );
-            })}
-          </div>
-
-          {!sidebarCollapsed && !proTipDismissed && (
-            <div className="mt-8 p-4 bg-muted rounded-xl border relative">
-              <button
-                onClick={dismissProTip}
-                className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground hover:bg-background rounded-md transition-all"
-                title="Dismiss pro tip"
-              >
-                <CloseIcon className="w-4 h-4" />
-              </button>
-              <h4 className="font-medium text-foreground mb-2 pr-6">💡 Quick Tip</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Use the Chat tab to generate tweet ideas, then post them directly from the Content tab.
-              </p>
-            </div>
-          )}
-        </nav>
-      </aside>
+      {/* Sidebar Component */}
+      <Sidebar
+        sidebarCollapsed={sidebarCollapsed}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        tabs={tabs}
+        proTipDismissed={proTipDismissed}
+        dismissProTip={dismissProTip}
+        setShowAddProductModal={setShowAddProductModal}
+      />
 
       {/* Main Content */}
-      <main className={`transition-all duration-300 p-4 lg:p-8 pt-8 ${
-        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'
-      }`}>
+      <main className="transition-all duration-300 p-4 lg:p-1  max-w-6xl mx-auto">
           {!selectedProduct ? (
             /* Empty State */
             <div className="max-w-2xl mx-auto text-center py-16">
@@ -716,10 +601,13 @@ export default function DashboardClient() {
                     xUsername: (session as any)?.xUsername,
                     xVerified: (session as any)?.xVerified,
                   }}
-                  onOpenEditor={(content) => {
+                  onOpenEditor={(content, onPostSuccess) => {
                     // First close any existing editor to ensure clean state
                     setShowPostEditor(false);
                     setEditingPost(null);
+                    
+                    // Store callback for when post is successfully published
+                    const postCallback = onPostSuccess;
                     
                     // Use setTimeout to ensure the close animation completes before opening with new content
                     setTimeout(() => {
@@ -729,6 +617,8 @@ export default function DashboardClient() {
                         platform: 'twitter',
                         status: 'draft',
                         hashtags: [],
+                        // Store callback in the post object to be used after successful publishing
+                        onPostSuccess: postCallback
                       });
                       setShowPostEditor(true);
                     }, 150); // Small delay to ensure smooth transition
@@ -838,6 +728,16 @@ export default function DashboardClient() {
       <ConnectXModal
         isOpen={showConnectXModal}
         onClose={() => setShowConnectXModal(false)}
+      />
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeletePost}
+        title="Delete Post"
+        message="Are you sure you want to delete this post?"
+        itemName={postToDelete ? posts.find(p => p.id === postToDelete)?.content.substring(0, 30) + '...' : ''}
       />
     </div>
   );
