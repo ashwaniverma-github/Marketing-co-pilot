@@ -1,240 +1,202 @@
 import { ThemeToggle } from '@/components/theme-toggle';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="px-6 py-4 border-b bg-card">
+      <nav className="fixed top-0 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md z-50  border-border">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-foreground rounded-lg flex items-center justify-center">
-              <span className="text-background font-bold text-sm">MC</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <span className="text-orange-500 text-2xl">🔥</span>
             </div>
-            <span className="font-semibold text-foreground">Marketing Co-Pilot</span>
+            <span className="font-bold text-foreground text-xl">LaunchStudio</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <button className="text-muted-foreground hover:text-foreground font-medium">Sign In</button>
-            <a href="/dashboard" className="inline-block bg-foreground text-background px-4 py-2 rounded-lg hover:bg-foreground/90 font-medium">
-              Start Free Trial
+          <div className="flex items-center space-x-6">
+            <a href="#features" className="text-muted-foreground hover:text-foreground">Features</a>
+            <a href="#pricing" className="text-muted-foreground font-semibold hover:text-foreground">Pricing</a>
+            
+            <div className="ml-4">
+              <ThemeToggle />
+            </div>
+            <a href="/dashboard" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
+              Get Started for Free
             </a>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-foreground leading-tight mb-6">
-            Your AI Marketing Teammate<br />
-            <span className="text-foreground">That Never Sleeps</span>
+      <section className="min-h-screen px-6 flex items-center justify-center relative overflow-hidden pt-24">
+        <div className="max-w-4xl mx-auto text-center ">
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight mb-6 max-w-3xl mx-auto">
+            Built for indie hackers to grow their app <br />
+            <span className="text-orange-500">On X</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Stop struggling with marketing your indie product. Get fresh, ready-to-use content 
-            generated weekly: tweets, memes, emails, and growth tactics. All tailored to your product.
+          <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
+            Our AI understands your app and your audience, and generates fresh content for you to post on X.
           </p>
           <div className="flex justify-center space-x-4">
-            <a href="/dashboard" className="inline-block bg-foreground text-background px-8 py-4 rounded-lg hover:bg-foreground/90 font-semibold text-lg">
-              Get Started Free
+            <a href="/login" className="bg-cyan-900 text-white px-8 py-4 rounded-full  font-semibold text-lg flex items-center">
+              Get Started for Free
             </a>
-            <button className="border border-border text-foreground px-8 py-4 rounded-lg hover:bg-muted font-semibold text-lg">
-              See Example Kit
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="px-6 py-20 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Inspiration for your X content
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Get AI-powered content suggestions tailored to your audience and brand.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">📊</span>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">My Post Queue</h3>
+              <p className="text-muted-foreground">
+                Organize and schedule your content in advance with our intuitive post queue system.
+              </p>
+            </div>
+            
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">💡</span>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Inspiration</h3>
+              <p className="text-muted-foreground">
+                Get AI-generated tweet suggestions tailored to your profile and audience preferences.
+              </p>
+            </div>
+            
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">📚</span>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Library</h3>
+              <p className="text-muted-foreground">
+                Access a comprehensive library of content templates and ideas to boost your social presence.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Today's Tweet Suggestions */}
+      <section className="px-6 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Today's tweet suggestions
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Custom-generated tweets tailored to your profile that you can use an inspiration or post directly
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+            <div>
+                  <p className="font-semibold text-foreground">User Name</p>
+                  <p className="text-sm text-muted-foreground">@username · 3m ago</p>
+                </div>
+              </div>
+              <p className="text-foreground mb-4">
+                LaunchStudio builds a ready-to-publish wall of content for you, every single day
+              </p>
+              <p className="text-foreground">Try it to see how great your content will be.</p>
+              <div className="mt-4 flex justify-end">
+                <button className="px-4 py-2 bg-foreground text-background rounded-md hover:bg-foreground/90">
+                  Use Tweet
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+                <div>
+                  <p className="font-semibold text-foreground">User Name</p>
+                  <p className="text-sm text-muted-foreground">@username · 3m ago</p>
+                </div>
+              </div>
+              <p className="text-foreground mb-4">
+                LaunchStudio finds and generates relevant memes based on what you usually talk about.
+              </p>
+              <div className="mt-4 flex justify-end">
+                <button className="px-4 py-2 bg-foreground text-background rounded-md hover:bg-foreground/90">
+                  Use Tweet
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 flex justify-center">
+            <button className="px-6 py-3 border border-border text-foreground rounded-md hover:bg-muted/50 font-medium">
+              View More Suggestions
             </button>
           </div>
         </div>
       </section>
 
-      {/* Problem Section */}
-      <section className="px-6 py-16 bg-muted">
+      {/* Features */}
+      <section className="px-6 py-20 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Stop Being Your Own Worst Marketing Enemy
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              You can build products. But marketing? That's where indie hackers struggle.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-600 text-2xl">⏰</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Time</h3>
-              <p className="text-gray-600">
-                You're already building features, fixing bugs, and talking to users. 
-                When do you have time to create marketing content?
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-600 text-2xl">🎨</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Skills</h3>
-              <p className="text-gray-600">
-                Copywriting, meme creation, growth hacking... these aren't your strengths. 
-                You're a builder, not a marketer.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-600 text-2xl">💰</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Budget</h3>
-              <p className="text-gray-600">
-                Marketing agencies cost $5K+ per month. Freelancers are hit-or-miss. 
-                You need something that actually works.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Solution Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Meet Your New Marketing Co-Pilot
-            </h2>
-            <p className="text-xl text-gray-600">
-              Every week, get a complete marketing package delivered to your dashboard.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="mb-16 flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">What You Get Every Week:</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">3-5 Social Posts</h4>
-                    <p className="text-gray-600">Optimized for Twitter, LinkedIn, and Reddit</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">1-2 Viral Memes</h4>
-                    <p className="text-gray-600">Auto-rendered with your product's branding</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">2-3 Email Snippets</h4>
-                    <p className="text-gray-600">Newsletter-ready content for your audience</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-    <div>
-                    <h4 className="font-semibold text-gray-900">Growth Tactics</h4>
-                    <p className="text-gray-600">Actionable strategies you can try this week</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-100 rounded-xl p-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h4 className="font-semibold text-gray-900 mb-4">📦 Your Weekly Kit</h4>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Twitter Posts</span>
-                    <span className="text-green-600">5 ready</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">LinkedIn Content</span>
-                    <span className="text-green-600">3 ready</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Memes Generated</span>
-                    <span className="text-green-600">2 ready</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Email Snippets</span>
-                    <span className="text-green-600">3 ready</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Growth Ideas</span>
-                    <span className="text-green-600">2 ready</span>
-                  </div>
-                </div>
-                <button className="w-full bg-blue-600 text-white py-2 rounded-lg mt-4 hover:bg-blue-700">
-                  Approve & Schedule
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="px-6 py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              How It Works
+              <h2 className="text-3xl font-bold text-foreground mb-2">
+                All the tools you need
             </h2>
-            <p className="text-xl text-gray-600">
-              Set it up once, get content forever.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold">1</span>
+              <p className="text-xl text-muted-foreground">
+                Grow your audience with these powerful features
+              </p>
+            </div>
+            <div>
+              <button className="px-6 py-3 border border-border text-foreground rounded-md hover:bg-muted/50 font-medium">
+                View All Features
+              </button>
+            </div>
+            </div>
+            
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">📊</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Add Your Product</h3>
-              <p className="text-gray-600 text-sm">
-                Just paste your product URL. We'll analyze everything automatically.
+              <h3 className="font-semibold text-foreground mb-2">Analytics</h3>
+              <p className="text-muted-foreground text-sm">
+                Track your growth and understand what content performs best with your audience.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold">2</span>
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">🎯</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">AI Generates Kit</h3>
-              <p className="text-gray-600 text-sm">
-                Our AI creates a complete weekly marketing package for your product.
+              <h3 className="font-semibold text-foreground mb-2">Content Studio</h3>
+              <p className="text-muted-foreground text-sm">
+                Create, schedule, and publish content directly from our unified dashboard.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold">3</span>
+            <div className="bg-background border border-border rounded-lg p-6 hover:border-foreground/30 transition-all">
+              <div className="w-12 h-12 flex items-center justify-center mb-4">
+                <span className="text-2xl">🔗</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Review & Approve</h3>
-              <p className="text-gray-600 text-sm">
-                Tweak anything you want, then approve with one click.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold">4</span>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Auto-Schedule</h3>
-              <p className="text-gray-600 text-sm">
-                Content goes live automatically, or export to use anywhere.
+              <h3 className="font-semibold text-foreground mb-2">Social Hub</h3>
+              <p className="text-muted-foreground text-sm">
+                Connect all your social accounts in one place for seamless management.
               </p>
             </div>
           </div>
@@ -244,33 +206,33 @@ export default function Home() {
       {/* CTA Section */}
       <section className="px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
-            Stop Struggling. Start Growing.
+          <h2 className="text-4xl font-bold text-foreground mb-6">
+            Ready to grow your X presence?
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Join indie hackers who are growing consistently without the marketing headache.
+          <p className="text-xl text-muted-foreground mb-8">
+            Join thousands of creators who are growing consistently with actionable data and AI-powered content.
           </p>
-          <a href="/dashboard" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 font-semibold text-lg">
-            Get Started Free
+          <a href="/dashboard" className="inline-block bg-foreground text-background px-8 py-4 rounded-lg hover:bg-foreground/90 font-semibold text-lg">
+            Get Started For Free <span className="ml-1">→</span>
           </a>
-          <p className="text-gray-500 mt-4">
-            Free 7-day trial • No credit card required • Cancel anytime
+          <p className="text-muted-foreground mt-4">
+            No credit card required • Cancel anytime
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 px-6 py-12">
+      <footer className="border-t border-border px-6 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">MC</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <span className="text-orange-500 text-2xl">🔥</span>
               </div>
-              <span className="font-semibold text-gray-900">Marketing Co-Pilot</span>
+              <span className="font-bold text-foreground">LaunchStudio</span>
             </div>
-            <div className="text-gray-500 text-sm">
-              © 2024 Marketing Co-Pilot. Built for indie hackers.
+            <div className="text-muted-foreground text-sm">
+              © 2024 LaunchStudio. Built for creators and makers.
             </div>
           </div>
         </div>

@@ -153,6 +153,19 @@ select:focus {
   box-shadow: 0 0 0 3px var(--ring);
 }
 
+@keyframes border-animate {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-border {
+  animation: border-animate 3s ease infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -45,7 +45,7 @@ export function Sidebar({
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'text-cyan-950 dark:text-cyan-950 transform scale-105'
+                      ? 'text-cyan-950 dark:text-cyan-800 transform scale-105'
                       : 'text-muted-foreground hover:text-foreground hover:scale-105'
                   }`}
                 >

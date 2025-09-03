@@ -69,7 +69,7 @@ export default function LoginPage() {
               Get Started
             </h2>
             <p className="text-muted-foreground text-sm">
-              Continue with Google or Twitter to sign in
+              Continue with X (Twitter)
             </p>
           </div>
 
@@ -80,7 +80,7 @@ export default function LoginPage() {
           )}
 
           {/* Google OAuth Login */}
-          <Button
+          {/* <Button
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading || isTwitterLoading}
             className="w-full cursor-pointer bg-white text-black border hover:bg-gray-50"
@@ -105,7 +105,7 @@ export default function LoginPage() {
                 Continue with Google
               </>
             )}
-          </Button>
+          </Button> */}
 
           {/* Twitter OAuth Login */}
           <Button
@@ -132,7 +132,6 @@ export default function LoginPage() {
             )}
           </Button>
 
-          {/* Demo login removed */}
         </div>
 
         <div className="text-center text-sm text-muted-foreground">
