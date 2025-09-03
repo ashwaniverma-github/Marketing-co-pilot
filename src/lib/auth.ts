@@ -117,7 +117,7 @@ async function getCachedAppBearerToken() {
 
   // Fallback to client credentials if no bearer token
   if (cachedAppBearer && cachedAppBearer.expiresAt > Date.now() + 60_000) {
-    return cachedAppBearer.token;
+    return cachedAppBearer.token; 
   }
 
   const key = process.env.TWITTER_CLIENT_ID;
