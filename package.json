@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "build": "next build",
     "start": "next start",
+    "dev": "next dev",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

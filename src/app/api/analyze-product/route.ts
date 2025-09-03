@@ -145,10 +145,10 @@ export async function POST(request: NextRequest) {
       app: {
         id: app.id,
         name: app.name,
-        tagline: app.tagline,
-        description: app.description,
+        tagline: app.tagline || '',
+        description: app.description || '',
         url: app.url,
-        logoUrl: app.logoUrl,
+        logoUrl: app.logoUrl || null,
         category: app.category,
         stage: app.stage,
         status: app.status,
@@ -156,58 +156,58 @@ export async function POST(request: NextRequest) {
         updatedAt: app.updatedAt,
       },
       scrapedData: {
-        title: scrapedData.title,
-        description: scrapedData.description,
-        features: scrapedData.features.slice(0, 8),
-        benefits: scrapedData.benefits.slice(0, 6),
-        pricing: scrapedData.pricing.slice(0, 8),
-        testimonials: scrapedData.testimonials.slice(0, 5),
+        title: scrapedData.title || '',
+        description: scrapedData.description || '',
+        features: (scrapedData.features || []).slice(0, 8),
+        benefits: (scrapedData.benefits || []).slice(0, 6),
+        pricing: (scrapedData.pricing || []).slice(0, 8),
+        testimonials: (scrapedData.testimonials || []).slice(0, 5),
         
         // Media & Assets
-        images: scrapedData.images.slice(0, 10),
-        videos: scrapedData.videos.slice(0, 5),
-        logoUrl: scrapedData.logoUrl,
-        favicon: scrapedData.favicon,
+        images: (scrapedData.images || []).slice(0, 10),
+        videos: (scrapedData.videos || []).slice(0, 5),
+        logoUrl: scrapedData.logoUrl || null,
+        favicon: scrapedData.favicon || null,
         
         // Contact & Social
-        socialLinks: scrapedData.socialLinks.slice(0, 10),
-        contactInfo: scrapedData.contactInfo,
+        socialLinks: (scrapedData.socialLinks || []).slice(0, 10),
+        contactInfo: scrapedData.contactInfo || null,
         
         // Technical Information
-        technologies: scrapedData.technologies,
-        seoScore: scrapedData.seoScore,
-        mobileOptimized: scrapedData.mobileOptimized,
-        httpsEnabled: scrapedData.httpsEnabled,
+        technologies: scrapedData.technologies || [],
+        seoScore: scrapedData.seoScore || null,
+        mobileOptimized: scrapedData.mobileOptimized || false,
+        httpsEnabled: scrapedData.httpsEnabled || false,
         
         // Content Analysis
-        wordCount: scrapedData.wordCount,
-        readingTime: scrapedData.readingTime,
-        languageDetected: scrapedData.languageDetected,
-        keywords: scrapedData.keywords.slice(0, 15),
-        sentiment: scrapedData.sentiment,
+        wordCount: scrapedData.wordCount || 0,
+        readingTime: scrapedData.readingTime || 0,
+        languageDetected: scrapedData.languageDetected || null,
+        keywords: (scrapedData.keywords || []).slice(0, 15),
+        sentiment: scrapedData.sentiment || null,
         
         // Business Information
-        companyInfo: scrapedData.companyInfo,
-        businessModel: scrapedData.businessModel,
-        industryCategory: scrapedData.industryCategory,
+        companyInfo: scrapedData.companyInfo || null,
+        businessModel: scrapedData.businessModel || null,
+        industryCategory: scrapedData.industryCategory || null,
         
         // Navigation & Structure
-        navigationMenu: scrapedData.navigationMenu.slice(0, 10),
-        footerLinks: scrapedData.footerLinks.slice(0, 10),
+        navigationMenu: (scrapedData.navigationMenu || []).slice(0, 10),
+        footerLinks: (scrapedData.footerLinks || []).slice(0, 10),
         
         // E-commerce
-        categories: scrapedData.categories.slice(0, 10),
-        paymentMethods: scrapedData.paymentMethods,
+        categories: (scrapedData.categories || []).slice(0, 10),
+        paymentMethods: scrapedData.paymentMethods || [],
         
         // Analytics & Tools
-        analyticsTools: scrapedData.analyticsTools,
+        analyticsTools: scrapedData.analyticsTools || [],
         
         // Quality Metrics
-        scrapeQuality: scrapedData.scrapeQuality,
-        completeness: scrapedData.completeness,
+        scrapeQuality: scrapedData.scrapeQuality || 0,
+        completeness: scrapedData.completeness || 0,
         
         // Performance
-        performanceMetrics: scrapedData.performanceMetrics,
+        performanceMetrics: scrapedData.performanceMetrics || null,
       },
     };
 
@@ -224,6 +224,16 @@ export async function POST(request: NextRequest) {
     }
     
     console.error('Product analysis error:', error);
+    
+    // Detailed error logging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      });
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to analyze product',
