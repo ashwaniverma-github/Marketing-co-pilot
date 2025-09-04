@@ -631,7 +631,7 @@ export default function DashboardClient() {
               {activeTab === 'content' && (
                 <div className="space-y-6">
                   {/* Connection Status */}
-                  <div className="bg-card border rounded-xl p-4">
+                  <div className="bg-card border rounded-xl p-4 mt-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-1">X (Twitter) Connection</h3>
