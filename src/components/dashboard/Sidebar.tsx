@@ -1,7 +1,5 @@
 'use client';
 
-import { CloseIcon, SparklesIcon, PlusIcon } from '@/components/icons';
-
 // Define tab types to match exactly what's in the dashboard-client
 type TabId = 'content' | 'chat';
 
