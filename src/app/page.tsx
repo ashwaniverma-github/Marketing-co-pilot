@@ -16,7 +16,7 @@ export default function Home() {
             <div className="w-8 h-8 flex items-center justify-center">
               <span className="text-orange-500 text-2xl">🔥</span>
             </div>
-            <span className="font-bold text-foreground text-xl">LaunchStudio</span>
+            <span className="font-bold text-foreground text-xl">Indiepost</span>
           </div>
           <div className="flex items-center space-x-6">
             <a href="#features" className="text-muted-foreground hover:text-foreground">Features</a>
@@ -65,7 +65,7 @@ export default function Home() {
           <div className="w-full h-[625px] relative rounded-2xl">
             <Image 
               src={resolvedTheme === 'dark' ? "/landing-dark.png" : "/landing-light.png"}
-              alt="LaunchStudio Content Creation Dashboard" 
+              alt="Indiepost Content Creation Dashboard" 
               fill 
               className="object-cover rounded-2xl" 
               priority
@@ -105,10 +105,10 @@ export default function Home() {
               <div className="w-8 h-8 flex items-center justify-center">
                 <span className="text-orange-500 text-2xl">🔥</span>
               </div>
-              <span className="font-bold text-foreground">LaunchStudio</span>
+              <span className="font-bold text-foreground">Indiepost</span>
             </div>
             <div className="text-muted-foreground text-sm">
-              © 2024 LaunchStudio. Built for creators and makers.
+              © 2024 Indiepost. Built for creators and makers.
             </div>
           </div>
         </div>

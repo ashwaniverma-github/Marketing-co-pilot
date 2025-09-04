@@ -15,7 +15,7 @@ export default function PricingPage() {
             <div className="w-8 h-8 flex items-center justify-center">
               <span className="text-orange-500 text-2xl">🔥</span>
             </div>
-            <span className="font-bold text-foreground text-xl">LaunchStudio</span>
+            <span className="font-bold text-foreground text-xl">Indiepost</span>
           </Link>
           <div className="flex items-center space-x-6">
             <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
@@ -28,7 +28,7 @@ export default function PricingPage() {
       </nav>
 
       {/* Pricing Hero */}
-      <section className="pt-24 px-6 text-center">
+      <section className="pt-24 px-6 text-center space-y-4 ">
         <h1 className="text-4xl font-semibold text-foreground mb-6">
           Simple, Transparent Pricing
         </h1>
@@ -61,7 +61,7 @@ export default function PricingPage() {
             Best Value
           </div>
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            LaunchStudio Pro
+            Indiepost Pro
           </h2>
           <p className="text-muted-foreground mb-6">
             All-in-one AI growth platform for indie hackers
@@ -122,10 +122,10 @@ export default function PricingPage() {
             <div className="w-8 h-8 flex items-center justify-center">
               <span className="text-orange-500 text-2xl">🔥</span>
             </div>
-            <span className="font-bold text-foreground">LaunchStudio</span>
+            <span className="font-bold text-foreground">Indiepost</span>
           </div>
           <div className="text-muted-foreground text-sm">
-            © 2024 LaunchStudio. Built for creators and makers.
+            © 2024 Indiepost. Built for creators and makers.
           </div>
         </div>
       </footer>

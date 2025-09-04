@@ -1,3 +1,7 @@
+# Indiepost
+
+Indiepost is a powerful platform for independent creators to manage, schedule, and optimize their online presence across multiple social platforms.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
