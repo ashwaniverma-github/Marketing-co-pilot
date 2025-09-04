@@ -424,13 +424,13 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
       )}
 
       {/* Input Area - Positioned based on conversation state */}
-      <div className={`${messages.length === 0 ? 'flex flex-col justify-center flex-1 w-4/5 mx-auto' : ' w-4/5 mx-auto absolute bottom-0 left-0 right-0'} bg-background`}>
+      <div className={`${messages.length === 0 ? 'flex flex-col justify-center flex-1 sm:w-4/5 w-11/12 mx-auto' : ' sm:w-4/5 w-11/12 mx-auto absolute bottom-0 left-0 right-0'} bg-background`}>
         {/* Tweet Mode Toggle */}
         <div className="px-4 pt-2">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setTweetMode(!tweetMode)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all ${
+              className={`flex items-center space-x-2 px-3 py-1 rounded-xl border transition-all ${
                 tweetMode 
                   ? ' bg-cyan-950 text-white ' 
                   : 'bg-background text-foreground border-border hover:bg-muted'

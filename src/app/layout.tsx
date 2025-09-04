@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Marketing Co-Pilot - AI Marketing Automation for Indie Hackers",
-  description: "The set-and-forget marketing teammate that generates fresh weekly content for your product. Save time, grow consistently.",
+  title: "Indiepost - Your App's Growth Co-Pilot",
+  description: "Just Give Us The Url Of Your App And We Will Handle The Rest",
 };
 
 export default function RootLayout({

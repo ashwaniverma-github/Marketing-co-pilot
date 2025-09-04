@@ -631,7 +631,7 @@ export default function DashboardClient() {
               {activeTab === 'content' && (
                 <div className="space-y-6">
                   {/* Connection Status */}
-                  <div className="bg-card border rounded-xl p-6">
+                  <div className="bg-card border rounded-xl p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-1">X (Twitter) Connection</h3>
@@ -670,17 +670,17 @@ export default function DashboardClient() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-2xl font-semibold text-foreground">Content Management</h3>
-                      <p className="text-muted-foreground mt-1">Create, schedule, and manage your social media posts</p>
+                      <p className="text-muted-foreground mt-1">Create, schedule, and manage posts</p>
                     </div>
                     <button 
                       onClick={() => {
                         setEditingPost(null);
                         setShowPostEditor(true);
                       }}
-                      className="bg-foreground text-background px-5 py-2.5 rounded-lg hover:bg-foreground/90 font-medium flex items-center space-x-2 transition-all"
+                      className="bg-foreground text-background px-2 py-2.5 rounded-lg hover:bg-foreground/90 font-medium flex items-center space-x-2 transition-all"
                     >
-                      <PlusIcon className="w-4 h-4" />
-                      <span>Create Post</span>
+                      
+                      <span>New Post</span>
                     </button>
                   </div>
 
