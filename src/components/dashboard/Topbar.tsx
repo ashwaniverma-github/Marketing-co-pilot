@@ -1,33 +1,25 @@
 'use client';
 
 // Define tab types to match exactly what's in the dashboard-client
-type TabId = 'content' | 'chat';
+type TabId = 'Content' | 'Chat' | 'Knowledge base';
 
 type TabItem = {
   id: TabId;
   name: string;
-  icon: React.ComponentType<{ className?: string }>;
 };
 
-interface SidebarProps {
-  sidebarCollapsed: boolean;
+interface TopbarProps {
   activeTab: TabId;
   setActiveTab: React.Dispatch<React.SetStateAction<TabId>>;
   tabs: TabItem[];
-  proTipDismissed: boolean;
-  dismissProTip: () => void;
-  setShowAddProductModal: (show: boolean) => void;
+
 }
 
-export function Sidebar({
-  sidebarCollapsed,
+export function Topbar({
   activeTab,
   setActiveTab,
   tabs,
-  proTipDismissed,
-  dismissProTip,
-  setShowAddProductModal
-}: SidebarProps) {
+}: TopbarProps) {
   return (
     <div className="w-full sticky top-[4.5rem] z-30">
       {/* Horizontal Navigation Bar */}

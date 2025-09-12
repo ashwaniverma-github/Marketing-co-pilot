@@ -80,7 +80,7 @@ export default function LoginPage() {
           )}
 
           {/* Google OAuth Login */}
-          {/* <Button
+          <Button
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading || isTwitterLoading}
             className="w-full cursor-pointer bg-white text-black border hover:bg-gray-50"
@@ -105,7 +105,7 @@ export default function LoginPage() {
                 Continue with Google
               </>
             )}
-          </Button> */}
+          </Button>
 
           {/* Twitter OAuth Login */}
           <Button

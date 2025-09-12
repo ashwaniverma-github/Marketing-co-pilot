@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { TwitterIcon, CopyIcon, CheckIcon } from './icons';
 import { Forward, Edit } from 'lucide-react';
 import { eventBus, EVENTS } from '@/lib/event-bus';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AiChatProps {
   productId: string;
@@ -20,7 +21,12 @@ interface AiChatProps {
 }
 
 type ChatRole = 'user' | 'assistant';
-type ChatMessage = { role: ChatRole; content: string; isTweet?: boolean };
+type ChatMessage = { 
+  role: ChatRole; 
+  content: string; 
+  isTweet?: boolean; 
+  id?: string; 
+};
 
 export function AiChat({ productId, productName, productUrl, userProfile, onOpenEditor }: AiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -32,6 +38,98 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatSessionId = useRef<string>(uuidv4());
+  const isInitialLoad = useRef(true);
+
+  // Load chat history on component mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        console.log('Loading most recent chat history');
+        
+        const response = await fetch('/api/chat-history', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Chat history response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Chat history response data:', JSON.stringify(data, null, 2));
+        
+        // Check if data exists and has messages
+        if (data && data.messages) {
+          // Validate messages is an array of chat messages
+          if (Array.isArray(data.messages) && 
+              data.messages.length > 0 && 
+              data.messages.every((m: ChatMessage) => 
+                m.role && ['user', 'assistant'].includes(m.role) && 
+                m.content && typeof m.content === 'string'
+              )) {
+            console.log('Setting messages from chat history:', data.messages);
+            // Add unique ids to messages if not present
+            const messagesWithIds = data.messages.map((m: ChatMessage) => ({
+              ...m,
+              id: m.id || generateMessageId()
+            }));
+            setMessages(messagesWithIds);
+          } else {
+            console.warn('Invalid messages format:', data.messages);
+          }
+        } else {
+          console.log('No valid chat history found');
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      } finally {
+        isInitialLoad.current = false;
+      }
+    };
+
+    // Only load chat history if it's the initial load
+    if (isInitialLoad.current) {
+      loadChatHistory();
+    }
+  }, []); // Remove dependencies to load most recent chat
+
+  // Save chat history whenever messages change
+  useEffect(() => {
+    // Skip saving during initial load or if messages are empty
+    if (isInitialLoad.current || messages.length === 0) return;
+
+    const saveChatHistory = async () => {
+      try {
+        console.log('Saving chat history:', messages);
+        
+        const response = await fetch('/api/chat-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: messages.map(msg => ({
+              id: msg.id, // Include the existing ID
+              role: msg.role,
+              content: msg.content,
+              ...(msg.isTweet ? { isTweet: true } : {})
+            }))
+          })
+        });
+
+        const result = await response.json();
+        console.log('Chat history save result:', {
+          result,
+          savedMessageIds: result.messageIds
+        });
+      } catch (error) {
+        console.error('Failed to save chat history:', error);
+      }
+    };
+
+    // Debounce save to prevent too many requests
+    const timeoutId = setTimeout(saveChatHistory, 500);
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
 
   // Debug: Log userProfile data
   useEffect(() => {
@@ -40,9 +138,21 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     console.log('userProfile.xVerified:', userProfile?.xVerified);
   }, [userProfile]);
 
+  // Function to generate a cuid-like ID similar to Prisma's default
+  const generateMessageId = () => {
+    const prefix = 'cmf'; // Observed prefix in database
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const timePart = Date.now().toString(36).substring(2, 10);
+    return `${prefix}${randomPart}${timePart}`;
+  };
+
   const send = async () => {
     if (!input.trim()) return;
-    const userMessage: ChatMessage = { role: 'user', content: input };
+    const userMessage: ChatMessage = { 
+      role: 'user', 
+      content: input,
+      id: generateMessageId() 
+    };
     const next: ChatMessage[] = [...messages, userMessage];
     setMessages(next);
     setInput('');
@@ -73,7 +183,8 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
         const tweetMessages: ChatMessage[] = tweets.map((tweet: string) => ({
           role: 'assistant',
           content: tweet,
-          isTweet: true
+          isTweet: true,
+          id: generateMessageId()
         }));
         setMessages([...next, ...tweetMessages]);
       } else {
@@ -81,7 +192,8 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
         const assistantMessage: ChatMessage = { 
           role: 'assistant', 
           content: String(data.reply ?? ''),
-          isTweet: false
+          isTweet: false,
+          id: generateMessageId()
         };
         
         // Add the message to state first
@@ -95,7 +207,11 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
         }, 500);
       }
     } catch (e) {
-      const errorMessage: ChatMessage = { role: 'assistant', content: 'Sorry, something went wrong.' };
+      const errorMessage: ChatMessage = { 
+        role: 'assistant', 
+        content: 'Sorry, something went wrong.',
+        id: generateMessageId() 
+      };
       setMessages([...next, errorMessage]);
     } finally {
       setLoading(false);
@@ -221,9 +337,63 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
 
   // Function to handle tweet deletion
   const handleDeleteTweet = (tweetContent: string) => {
-    // Filter out the tweet with the matching content
-    const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
-    setMessages(updatedMessages);
+    // Find the message with the matching content
+    const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
+    
+    if (!tweetToDelete) {
+      console.warn('Tweet not found for deletion:', { 
+        tweetContent, 
+        messages: messages.filter(m => m.isTweet).map(m => ({
+          content: m.content,
+          id: m.id,
+          isTweet: m.isTweet
+        }))
+      });
+      return;
+    }
+
+    console.log('Tweet to delete:', {
+      content: tweetToDelete.content,
+      id: tweetToDelete.id,
+      isTweet: tweetToDelete.isTweet
+    });
+
+    // Send delete request to backend
+    const deleteTweet = async () => {
+      try {
+        // Ensure we have an ID
+        if (!tweetToDelete.id) {
+          console.error('No ID found for tweet:', tweetToDelete);
+          return;
+        }
+
+        const response = await fetch('/api/chat-history', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messageId: tweetToDelete.id
+          })
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          console.error('Delete tweet error response:', responseData);
+          throw new Error(responseData.error || 'Failed to delete tweet');
+        }
+
+        // Remove the tweet from messages
+        const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
+        setMessages(updatedMessages);
+      } catch (error) {
+        console.error('Error deleting tweet:', error);
+        // Optionally show an error toast or notification
+      }
+    };
+
+    deleteTweet();
   };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (

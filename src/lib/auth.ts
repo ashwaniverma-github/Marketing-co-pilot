@@ -526,11 +526,13 @@ export const authOptions: NextAuthOptions = {
     },
 
     async signIn({ user, account, profile }) {
-      // Google: update user fields
+      // Google: create or update social account
       if (account?.provider === "google" && profile && user?.id) {
         try {
           const googleProfile = profile as any;
           const existingUser = await db.user.findUnique({ where: { id: user.id } });
+          
+          // Update user details
           if (existingUser) {
             await db.user.update({
               where: { id: user.id },
@@ -540,6 +542,61 @@ export const authOptions: NextAuthOptions = {
                 email: (user as any).email ?? googleProfile?.email ?? existingUser.email,
               },
             });
+          }
+
+          // Check if social account already exists
+          let socialAccount = await db.socialAccount.findFirst({
+            where: {
+              userId: user.id,
+              platform: "GOOGLE",
+              platformUserId: account.providerAccountId,
+            },
+          });
+
+          // Create social account if it doesn't exist
+          if (!socialAccount) {
+            socialAccount = await db.socialAccount.create({
+              data: {
+                platform: "GOOGLE",
+                platformUserId: account.providerAccountId,
+                username: googleProfile?.email ?? "",
+                displayName: googleProfile?.name ?? "",
+                avatar: googleProfile?.picture ?? "",
+                isVerified: googleProfile?.email_verified ?? false,
+                isActive: true,
+                userId: user.id,
+              },
+            });
+          } else {
+            // Update existing social account
+            socialAccount = await db.socialAccount.update({
+              where: { id: socialAccount.id },
+              data: {
+                username: googleProfile?.email ?? socialAccount.username,
+                displayName: googleProfile?.name ?? socialAccount.displayName,
+                avatar: googleProfile?.picture ?? socialAccount.avatar,
+                isVerified: googleProfile?.email_verified ?? socialAccount.isVerified,
+                isActive: true,
+              },
+            });
+          }
+
+          // Link with Account record
+          if (socialAccount) {
+            try {
+              const accountRecord = await db.account.findFirst({
+                where: { userId: user.id, provider: "google" },
+              });
+
+              if (accountRecord) {
+                await db.socialAccount.update({
+                  where: { id: socialAccount.id },
+                  data: { accountId: accountRecord.id },
+                });
+              }
+            } catch (linkErr) {
+              console.error("signIn: Google account linking error:", linkErr);
+            }
           }
         } catch (err) {
           console.error("signIn callback (google) error:", err);

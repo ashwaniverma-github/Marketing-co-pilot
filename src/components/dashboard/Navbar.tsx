@@ -43,8 +43,6 @@ interface NavbarProps {
 }
 
 export function Navbar({
-  sidebarCollapsed,
-  toggleSidebar,
   products,
   selectedProduct,
   setSelectedProduct,

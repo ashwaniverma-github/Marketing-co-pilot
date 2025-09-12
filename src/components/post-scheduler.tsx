@@ -258,17 +258,6 @@ export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSche
                               }
                             }
                           }}>
-                            {publishingPostId === post.id ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Publishing...
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-4 h-4 mr-2" />
-                                Publish Now
-                              </>
-                            )}
                           </DropdownMenuItem>
                         )}
                         {post.status === 'scheduled' && (

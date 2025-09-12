@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { Platform } from '@prisma/client';
 
 async function getAuthenticatedUser(): Promise<string> {
   const session = await getServerSession(authOptions);
@@ -176,64 +177,108 @@ export async function POST(request: NextRequest) {
     // If no social account provided, try to find or create one for the platform
     let finalSocialAccountId = socialAccountId;
     if (!finalSocialAccountId) {
-      let socialAccount = await db.socialAccount.findFirst({
-        where: {
-          userId,
-          platform: platform.toUpperCase(),
-          isActive: true,
-        },
-      });
-      
-      if (!socialAccount) {
-        if (platform.toUpperCase() === 'TWITTER') {
-          // Try to bootstrap a SocialAccount from NextAuth account
-          const oauthAccount = await db.account.findFirst({
-            where: { userId, provider: 'twitter' },
-            select: { id: true, providerAccountId: true, access_token: true },
-          });
-
-          if (oauthAccount?.providerAccountId) {
-            const created = await db.socialAccount.create({
-              data: {
-                platform: 'TWITTER',
-                platformUserId: oauthAccount.providerAccountId,
-                username: `@${oauthAccount.providerAccountId}`,
-                displayName: 'Twitter',
-                isVerified: false,
-                isActive: true,
-                userId,
-                accountId: oauthAccount.id,
-              },
+      // For draft posts, allow null social account
+      if (status.toUpperCase() === 'DRAFT') {
+        finalSocialAccountId = null;
+      } else {
+        let socialAccount = await db.socialAccount.findFirst({
+          where: {
+            userId,
+            platform: platform.toUpperCase() as any,
+            isActive: true,
+          },
+        });
+        
+        if (!socialAccount) {
+          if (platform.toUpperCase() === 'TWITTER') {
+            // Try to bootstrap a SocialAccount from NextAuth account
+            const oauthAccount = await db.account.findFirst({
+              where: { userId, provider: 'twitter' },
+              select: { id: true, providerAccountId: true, access_token: true },
             });
-            socialAccount = created as any;
+
+            if (oauthAccount?.providerAccountId) {
+              const created = await db.socialAccount.create({
+                data: {
+                  platform: Platform.TWITTER,
+                  platformUserId: oauthAccount.providerAccountId,
+                  username: `@${oauthAccount.providerAccountId}`,
+                  displayName: 'Twitter',
+                  isVerified: false,
+                  isActive: true,
+                  userId,
+                  accountId: oauthAccount.id,
+                },
+              });
+              socialAccount = created;
+            }
+          } else if (platform.toUpperCase() === 'GOOGLE') {
+            // Try to bootstrap a SocialAccount from NextAuth account
+            const oauthAccount = await db.account.findFirst({
+              where: { userId, provider: 'google' },
+              select: { id: true, providerAccountId: true },
+            });
+
+            if (oauthAccount?.providerAccountId) {
+              const user = await db.user.findUnique({ 
+                where: { id: userId },
+                select: { name: true, email: true, image: true }
+              });
+
+              const created = await db.socialAccount.create({
+                data: {
+                  platform: Platform.GOOGLE,
+                  platformUserId: oauthAccount.providerAccountId,
+                  username: user?.email ?? '',
+                  displayName: user?.name ?? 'Google',
+                  avatar: user?.image ?? '',
+                  isVerified: true, // Email verified accounts are considered verified
+                  isActive: true,
+                  userId,
+                  accountId: oauthAccount.id,
+                },
+              });
+              socialAccount = created;
+            }
           }
         }
 
         if (!socialAccount) {
-          return NextResponse.json(
-            { error: `No connected ${platform} account found` },
-            { status: 400 }
-          );
+          // Only throw error for non-draft posts
+          if (status.toUpperCase() !== 'DRAFT') {
+            return NextResponse.json(
+              { error: `No connected ${platform} account found` },
+              { status: 400 }
+            );
+          }
+          finalSocialAccountId = null;
+        } else {
+          finalSocialAccountId = socialAccount.id;
         }
       }
-      
-      finalSocialAccountId = socialAccount.id;
+    }
+
+    // Create the post
+    const postData: any = {
+      content: normalize(content),
+      hashtags: hashtags || [],
+      mentions: [],
+      mediaUrls: [],
+      platform: platform.toUpperCase(),
+      status: status.toUpperCase(),
+      scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+      user: { connect: { id: userId } },
+      app: { connect: { id: appId } },
+      platformPostId: platformPostId || null,
+    };
+
+    // If a social account is provided, connect it
+    if (socialAccountId) {
+      postData.socialAccount = { connect: { id: socialAccountId } };
     }
 
     const post = await db.post.create({
-      data: {
-        content: normalize(content),
-        hashtags: hashtags || [],
-        mentions: [],
-        mediaUrls: [],
-        platform: platform.toUpperCase(),
-        status: status.toUpperCase(),
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
-        userId,
-        appId,
-        socialAccountId: finalSocialAccountId,
-        platformPostId: platformPostId || null,
-      },
+      data: postData,
       include: {
         app: {
           select: {

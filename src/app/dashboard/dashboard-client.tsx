@@ -9,7 +9,7 @@ import { AiChat } from '@/components/ai-chat';
 import { ConnectXModal } from '@/components/connect-x-modal';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 import { Navbar } from '@/components/dashboard/Navbar';
-import { Sidebar } from '@/components/dashboard/Sidebar';
+import { Topbar } from '@/components/dashboard/Topbar';
 import {
   ContentIcon,
   PlusIcon,
@@ -17,6 +17,7 @@ import {
   TwitterIcon,
   CloseIcon
 } from '@/components/icons';
+import KnowledgeBase from '@/components/KnowledgeBase';
 
 interface Product {
   id: string;
@@ -234,13 +235,11 @@ export default function DashboardClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   // Define tab type to match components
-  type TabId = 'content' | 'chat';
-  const [activeTab, setActiveTab] = useState<TabId>('content');
+  type TabId = 'Content' | 'Chat' | 'Knowledge base';
+  const [activeTab, setActiveTab] = useState<TabId>('Content');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [proTipDismissed, setProTipDismissed] = useState(false);
   
   // New post management state
   const [posts, setPosts] = useState<Post[]>([]);
@@ -266,17 +265,6 @@ export default function DashboardClient() {
     if (isAuthenticated && user) {
       loadApps();
       loadPosts();
-      
-      // Load UI preferences from localStorage
-      const savedSidebarState = localStorage.getItem('sidebarCollapsed');
-      if (savedSidebarState) {
-        setSidebarCollapsed(JSON.parse(savedSidebarState));
-      }
-
-      const savedProTipState = localStorage.getItem('proTipDismissed');
-      if (savedProTipState) {
-        setProTipDismissed(JSON.parse(savedProTipState));
-      }
     }
   }, [isAuthenticated, user]);
 
@@ -394,17 +382,6 @@ export default function DashboardClient() {
 
 
 
-  const toggleSidebar = () => {
-    const newState = !sidebarCollapsed;
-    setSidebarCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-  };
-
-  const dismissProTip = () => {
-    setProTipDismissed(true);
-    localStorage.setItem('proTipDismissed', JSON.stringify(true));
-  };
-
   // Post management functions
   const handleSavePost = async (post: Post) => {
     try {
@@ -505,8 +482,9 @@ export default function DashboardClient() {
 
 
   const tabs = [
-    { id: 'content' as const, name: 'Content', icon: ContentIcon },
-    { id: 'chat' as const, name: 'Chat', icon: SparklesIcon },
+    { id: 'Content' as const, name: 'Content'},
+    { id: 'Chat' as const, name: 'Chat'},
+    { id: 'Knowledge base' as const, name: 'Knowledge base'},
   ];
 
   const getPlatformIcon = (platform: string) => {
@@ -542,8 +520,6 @@ export default function DashboardClient() {
     <div className="min-h-screen bg-background">
       {/* Navbar Component */}
       <Navbar 
-        sidebarCollapsed={sidebarCollapsed}
-        toggleSidebar={toggleSidebar}
         products={products}
         selectedProduct={selectedProduct}
         setSelectedProduct={setSelectedProduct}
@@ -552,15 +528,11 @@ export default function DashboardClient() {
 
       {/* Mobile Tabs Navigation removed - using unified sidebar for all devices */}
 
-      {/* Sidebar Component */}
-      <Sidebar
-        sidebarCollapsed={sidebarCollapsed}
+      {/* Topbar Component */}
+      <Topbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         tabs={tabs}
-        proTipDismissed={proTipDismissed}
-        dismissProTip={dismissProTip}
-        setShowAddProductModal={setShowAddProductModal}
       />
 
       {/* Main Content */}
@@ -587,10 +559,15 @@ export default function DashboardClient() {
             </div>
           ) : (
             /* Dashboard Content */
+
             <div>
 
+              {activeTab === 'Knowledge base' && (
+                <KnowledgeBase productId={selectedProduct.id} />
+              )}
+
               {/* Tab Content */}
-              {activeTab === 'chat' && (
+              {activeTab === 'Chat' && (
                 <AiChat
                   productId={selectedProduct.id}
                   productName={selectedProduct.name}
@@ -626,9 +603,7 @@ export default function DashboardClient() {
                 />
               )}
 
-
-
-              {activeTab === 'content' && (
+              {activeTab === 'Content' && (
                 <div className="space-y-6">
                   {/* Connection Status */}
                   <div className="bg-card border rounded-xl p-4 mt-6">

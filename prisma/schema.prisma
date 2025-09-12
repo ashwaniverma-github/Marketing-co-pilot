@@ -24,6 +24,7 @@ model User {
   posts            Post[]
   sessions         Session[]
   socialAccounts   SocialAccount[]
+  chatHistories    ChatHistory[]
 
   @@map("users")
 }
@@ -204,15 +205,44 @@ model Post {
   updatedAt       DateTime      @updatedAt
   userId          String
   appId           String
-  socialAccountId String
+  socialAccountId String?
   app             App           @relation(fields: [appId], references: [id], onDelete: Cascade)
   parentPost      Post?         @relation("PostThread", fields: [parentPostId], references: [id])
   replies         Post[]        @relation("PostThread")
-  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  socialAccount   SocialAccount? @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("posts")
 }
+
+model ChatHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  sessionId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([userId, sessionId]) // <- required for findUnique/upsert by compound key
+  @@index([userId])
+  @@index([sessionId])
+  @@map("chat_histories")
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  chatHistoryId String
+  role         String
+  content      String
+  createdAt    DateTime @default(now())
+  isTweet      Boolean  @default(false)
+  chatHistory  ChatHistory @relation(fields: [chatHistoryId], references: [id], onDelete: Cascade)
+
+  @@index([chatHistoryId])
+}
+                     
 
 
 
@@ -276,6 +306,7 @@ enum AppStatus {
 
 enum Platform {
   TWITTER
+  GOOGLE
 }
 
 enum PostStatus {
