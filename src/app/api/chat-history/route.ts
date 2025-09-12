@@ -4,12 +4,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
 
-type ChatMessage = {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp?: string;
-  isTweet?: boolean;
-};
+// Remove unused type if not needed
+// type ChatMessage = { role: string; content: string; isTweet?: boolean };
 
 export async function POST(req: NextRequest) {
   try {
@@ -92,7 +88,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) { // Use underscore for unused parameter
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

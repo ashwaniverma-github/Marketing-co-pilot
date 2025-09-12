@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from './ui/button';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { TwitterIcon, CopyIcon, CheckIcon } from './icons';
 import { Forward, Edit } from 'lucide-react';
 import { eventBus, EVENTS } from '@/lib/event-bus';
@@ -38,8 +37,115 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatSessionId = useRef<string>(uuidv4());
   const isInitialLoad = useRef(true);
+
+  // Function to generate a stable message ID
+  const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
+    // Create a hash-like ID based on content and role
+    const baseString = `${role}-${content}-${isTweet || false}`;
+    let hash = 0;
+    for (let i = 0; i < baseString.length; i++) {
+      const char = baseString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Prefix with 'cmf' to match database ID format
+    return `cmf${Math.abs(hash).toString(36)}`;
+  };
+
+  // Memoize functions to prevent unnecessary re-renders
+  const autoResizeTextarea = useCallback(() => {
+    if (textareaRef.current) {
+      // Reset to minimum height first to properly measure content
+      textareaRef.current.style.height = '60px';
+      
+      // If there's no content, keep minimum height
+      if (!input.trim()) {
+        textareaRef.current.style.height = '60px';
+        return;
+      }
+      
+      // Calculate new height based on content
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; // Maximum height before scrolling
+      const minHeight = 60; // Minimum height
+      const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [input]);
+
+  // Scroll to bottom whenever messages change
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Detect tweet intent (currently unused)
+  // const detectTweetIntent = (text: string) => {
+  //   const tweetKeywords = ['tweet', 'twitter', 'post', 'social media'];
+  //   return tweetKeywords.some(keyword => text.toLowerCase().includes(keyword));
+  // };
+
+  // Function to handle tweet deletion
+  const handleDeleteTweet = useCallback((tweetContent: string) => {
+    // Find the message with the matching content
+    const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
+    
+    if (!tweetToDelete) {
+      console.warn('Tweet not found for deletion:', { 
+        tweetContent, 
+        messages: messages.filter(m => m.isTweet).map(m => ({
+          content: m.content,
+          id: m.id,
+          isTweet: m.isTweet
+        }))
+      });
+      return;
+    }
+
+    console.log('Tweet to delete:', {
+      content: tweetToDelete.content,
+      id: tweetToDelete.id,
+      isTweet: tweetToDelete.isTweet
+    });
+
+    // Send delete request to backend
+    const deleteTweet = async () => {
+      try {
+        // Ensure we have an ID
+        if (!tweetToDelete.id) {
+          console.error('No ID found for tweet:', tweetToDelete);
+          return;
+        }
+
+        const response = await fetch('/api/chat-history', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messageId: tweetToDelete.id
+          })
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          console.error('Delete tweet error response:', responseData);
+          throw new Error(responseData.error || 'Failed to delete tweet');
+        }
+
+        // Remove the tweet from messages
+        const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
+        setMessages(updatedMessages);
+      } catch (error) {
+        console.error('Error deleting tweet:', error);
+        // Optionally show an error toast or notification
+      }
+    };
+
+    deleteTweet();
+  }, [messages]);
 
   // Load chat history on component mount
   useEffect(() => {
@@ -59,27 +165,22 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
         const data = await response.json();
         console.log('Chat history response data:', JSON.stringify(data, null, 2));
         
-        // Check if data exists and has messages
-        if (data && data.messages) {
-          // Validate messages is an array of chat messages
-          if (Array.isArray(data.messages) && 
-              data.messages.length > 0 && 
-              data.messages.every((m: ChatMessage) => 
-                m.role && ['user', 'assistant'].includes(m.role) && 
-                m.content && typeof m.content === 'string'
-              )) {
-            console.log('Setting messages from chat history:', data.messages);
-            // Add unique ids to messages if not present
-            const messagesWithIds = data.messages.map((m: ChatMessage) => ({
-              ...m,
-              id: m.id || generateMessageId()
-            }));
-            setMessages(messagesWithIds);
-          } else {
-            console.warn('Invalid messages format:', data.messages);
-          }
+        // Validate messages is an array of chat messages
+        if (Array.isArray(data.messages) && 
+            data.messages.length > 0 && 
+            data.messages.every((m: ChatMessage) => 
+              m.role && ['user', 'assistant'].includes(m.role) && 
+              m.content && typeof m.content === 'string'
+            )) {
+          console.log('Setting messages from chat history:', data.messages);
+          // Generate stable IDs for messages
+          const messagesWithStableIds = data.messages.map((m: ChatMessage) => ({
+            ...m,
+            id: m.id || generateStableMessageId(m.content, m.role, m.isTweet)
+          }));
+          setMessages(messagesWithStableIds);
         } else {
-          console.log('No valid chat history found');
+          console.warn('Invalid messages format:', data.messages);
         }
       } catch (error) {
         console.error('Failed to load chat history:', error);
@@ -92,7 +193,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     if (isInitialLoad.current) {
       loadChatHistory();
     }
-  }, []); // Remove dependencies to load most recent chat
+  }, []); // Empty dependency array as intended
 
   // Save chat history whenever messages change
   useEffect(() => {
@@ -108,7 +209,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: messages.map(msg => ({
-              id: msg.id, // Include the existing ID
+              id: msg.id || generateStableMessageId(msg.content, msg.role, msg.isTweet),
               role: msg.role,
               content: msg.content,
               ...(msg.isTweet ? { isTweet: true } : {})
@@ -139,19 +240,19 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   }, [userProfile]);
 
   // Function to generate a cuid-like ID similar to Prisma's default
-  const generateMessageId = () => {
-    const prefix = 'cmf'; // Observed prefix in database
-    const randomPart = Math.random().toString(36).substring(2, 15);
-    const timePart = Date.now().toString(36).substring(2, 10);
-    return `${prefix}${randomPart}${timePart}`;
-  };
+  // const generateMessageId = () => {
+  //   const prefix = 'cmf'; // Observed prefix in database
+  //   const randomPart = Math.random().toString(36).substring(2, 15);
+  //   const timePart = Date.now().toString(36).substring(2, 10);
+  //   return `${prefix}${randomPart}${timePart}`;
+  // };
 
   const send = async () => {
     if (!input.trim()) return;
     const userMessage: ChatMessage = { 
       role: 'user', 
       content: input,
-      id: generateMessageId() 
+      id: generateStableMessageId(input, 'user')
     };
     const next: ChatMessage[] = [...messages, userMessage];
     setMessages(next);
@@ -184,7 +285,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
           role: 'assistant',
           content: tweet,
           isTweet: true,
-          id: generateMessageId()
+          id: generateStableMessageId(tweet, 'assistant', true)
         }));
         setMessages([...next, ...tweetMessages]);
       } else {
@@ -193,7 +294,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
           role: 'assistant', 
           content: String(data.reply ?? ''),
           isTweet: false,
-          id: generateMessageId()
+          id: generateStableMessageId(String(data.reply ?? ''), 'assistant')
         };
         
         // Add the message to state first
@@ -210,7 +311,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
       const errorMessage: ChatMessage = { 
         role: 'assistant', 
         content: 'Sorry, something went wrong.',
-        id: generateMessageId() 
+        id: generateStableMessageId('Sorry, something went wrong.', 'assistant')
       };
       setMessages([...next, errorMessage]);
     } finally {
@@ -218,44 +319,44 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     }
   };
 
-  const detectTweetIntent = (text: string) => {
-    const tweetKeywords = ['tweet', 'twitter', 'post', 'social media'];
-    return tweetKeywords.some(keyword => text.toLowerCase().includes(keyword));
-  };
+  // const detectTweetIntent = (text: string) => {
+  //   const tweetKeywords = ['tweet', 'twitter', 'post', 'social media'];
+  //   return tweetKeywords.some(keyword => text.toLowerCase().includes(keyword));
+  // };
 
-  const autoResizeTextarea = () => {
-    if (textareaRef.current) {
-      // Reset to minimum height first to properly measure content
-      textareaRef.current.style.height = '60px';
+  // const autoResizeTextarea = () => {
+  //   if (textareaRef.current) {
+  //     // Reset to minimum height first to properly measure content
+  //     textareaRef.current.style.height = '60px';
       
-      // If there's no content, keep minimum height
-      if (!input.trim()) {
-        textareaRef.current.style.height = '60px';
-        return;
-      }
+  //     // If there's no content, keep minimum height
+  //     if (!input.trim()) {
+  //       textareaRef.current.style.height = '60px';
+  //       return;
+  //     }
       
-      // Calculate new height based on content
-      const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 120; // Maximum height before scrolling
-      const minHeight = 60; // Minimum height
-      const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  };
+  //     // Calculate new height based on content
+  //     const scrollHeight = textareaRef.current.scrollHeight;
+  //     const maxHeight = 120; // Maximum height before scrolling
+  //     const minHeight = 60; // Minimum height
+  //     const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+  //     textareaRef.current.style.height = `${newHeight}px`;
+  //   }
+  // };
 
   useEffect(() => {
     autoResizeTextarea();
-  }, [input]);
+  }, [autoResizeTextarea]);
   
   // Scroll to bottom whenever messages change
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // };
   
   // Auto-scroll when messages change
   useEffect(() => {
     scrollToBottom();
-  }, [messages, loading, isTyping]);
+  }, [messages, loading, isTyping, scrollToBottom]);
   
   // Listen for tweet posted events
   useEffect(() => {
@@ -273,7 +374,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     return () => {
       eventBus.off(EVENTS.TWEET_POSTED, handleTweetPosted);
     };
-  }, [messages]); // Re-subscribe when messages change
+  }, [handleDeleteTweet]); // Add handleDeleteTweet to dependency array
 
   const formatContent = (content: string) => {
     // First handle markdown links [text](url)
@@ -336,65 +437,65 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   };
 
   // Function to handle tweet deletion
-  const handleDeleteTweet = (tweetContent: string) => {
-    // Find the message with the matching content
-    const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
+  // const handleDeleteTweet = (tweetContent: string) => {
+  //   // Find the message with the matching content
+  //   const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
     
-    if (!tweetToDelete) {
-      console.warn('Tweet not found for deletion:', { 
-        tweetContent, 
-        messages: messages.filter(m => m.isTweet).map(m => ({
-          content: m.content,
-          id: m.id,
-          isTweet: m.isTweet
-        }))
-      });
-      return;
-    }
+  //   if (!tweetToDelete) {
+  //     console.warn('Tweet not found for deletion:', { 
+  //       tweetContent, 
+  //       messages: messages.filter(m => m.isTweet).map(m => ({
+  //         content: m.content,
+  //         id: m.id,
+  //         isTweet: m.isTweet
+  //       }))
+  //     });
+  //     return;
+  //   }
 
-    console.log('Tweet to delete:', {
-      content: tweetToDelete.content,
-      id: tweetToDelete.id,
-      isTweet: tweetToDelete.isTweet
-    });
+  //   console.log('Tweet to delete:', {
+  //     content: tweetToDelete.content,
+  //     id: tweetToDelete.id,
+  //     isTweet: tweetToDelete.isTweet
+  //   });
 
-    // Send delete request to backend
-    const deleteTweet = async () => {
-      try {
-        // Ensure we have an ID
-        if (!tweetToDelete.id) {
-          console.error('No ID found for tweet:', tweetToDelete);
-          return;
-        }
+  //   // Send delete request to backend
+  //   const deleteTweet = async () => {
+  //     try {
+  //       // Ensure we have an ID
+  //       if (!tweetToDelete.id) {
+  //         console.error('No ID found for tweet:', tweetToDelete);
+  //         return;
+  //       }
 
-        const response = await fetch('/api/chat-history', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            messageId: tweetToDelete.id
-          })
-        });
+  //       const response = await fetch('/api/chat-history', {
+  //         method: 'DELETE',
+  //         headers: {
+  //           'Content-Type': 'application/json'
+  //         },
+  //         body: JSON.stringify({
+  //           messageId: tweetToDelete.id
+  //         })
+  //       });
 
-        const responseData = await response.json();
+  //       const responseData = await response.json();
 
-        if (!response.ok) {
-          console.error('Delete tweet error response:', responseData);
-          throw new Error(responseData.error || 'Failed to delete tweet');
-        }
+  //       if (!response.ok) {
+  //         console.error('Delete tweet error response:', responseData);
+  //         throw new Error(responseData.error || 'Failed to delete tweet');
+  //       }
 
-        // Remove the tweet from messages
-        const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
-        setMessages(updatedMessages);
-      } catch (error) {
-        console.error('Error deleting tweet:', error);
-        // Optionally show an error toast or notification
-      }
-    };
+  //       // Remove the tweet from messages
+  //       const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
+  //       setMessages(updatedMessages);
+  //     } catch (error) {
+  //       console.error('Error deleting tweet:', error);
+  //       // Optionally show an error toast or notification
+  //     }
+  //   };
 
-    deleteTweet();
-  };
+  //   deleteTweet();
+  // };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
     <div className="bg-card border border-gray-300 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">

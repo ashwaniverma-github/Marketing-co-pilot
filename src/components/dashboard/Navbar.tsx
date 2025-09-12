@@ -34,8 +34,6 @@ interface Product {
 }
 
 interface NavbarProps {
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
   products: Product[];
   selectedProduct: Product | null;
   setSelectedProduct: React.Dispatch<React.SetStateAction<Product | null>>;
