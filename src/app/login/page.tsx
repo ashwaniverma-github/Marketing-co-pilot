@@ -65,9 +65,6 @@ export default function LoginPage() {
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Get Started
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Continue with X (Twitter)
-            </p>
           </div>
 
           {error && (
@@ -133,7 +130,7 @@ export default function LoginPage() {
 
         <div className="text-center text-sm text-muted-foreground">
           <p>
-            Built for indie hackers who want to grow their apps on X (Twitter)
+            Built for indie hackers who want to grow their apps
           </p>
         </div>
       </div>
