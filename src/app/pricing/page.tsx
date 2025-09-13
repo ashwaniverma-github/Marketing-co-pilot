@@ -10,10 +10,7 @@ export default function PricingPage() {
       <nav className="fixed top-0 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md z-50 border-b border-border">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <span className="text-orange-500 text-2xl">🔥</span>
-            </div>
-            <span className="font-bold text-foreground text-xl">Indiepost</span>
+            <span className="font-bold text-foreground text-xl font-mono">Indiegrowth</span>
           </Link>
           <div className="flex items-center space-x-6">
             <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
@@ -37,10 +34,10 @@ export default function PricingPage() {
             Best Value
           </div>
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            Indiepost Pro
+            Indiegrowth Pro
           </h2>
           <p className="text-muted-foreground mb-6">
-            All-in-one AI growth platform for indie hackers
+            All-in-one AI growth platform for indie hackers to grow their app
           </p>
           <div className="mb-6">
             <span className="text-5xl font-bold text-foreground">$10</span>
@@ -85,13 +82,10 @@ export default function PricingPage() {
       <footer className="px-6 py-20">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <span className="text-orange-500 text-2xl">🔥</span>
-            </div>
-            <span className="font-bold text-foreground">Indiepost</span>
+            <span className="font-bold text-foreground font-mono">Indiegrowth</span>
           </div>
           <div className="text-muted-foreground text-sm">
-            © 2024 Indiepost. Built for creators and makers.
+            © 2024 <span className="font-mono">Indiegrowth</span>. Built to grow your app.
           </div>
         </div>
       </footer>

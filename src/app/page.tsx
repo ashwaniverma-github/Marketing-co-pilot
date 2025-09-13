@@ -16,10 +16,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md z-50 border-border">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <span className="text-orange-500 text-2xl">🔥</span>
-            </div>
-            <span className="font-bold text-foreground text-xl">Indiepost</span>
+            <span className="font-bold text-foreground text-xl font-mono">Indiegrowth</span>
           </div>
           
           {/* Desktop Navigation */}
@@ -84,10 +81,10 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-foreground leading-tight mb-6 max-w-3xl mx-auto">
             Built For Indie Hackers To Grow Their App <br />
-            <span className="text-orange-500">On X</span>
+            <span className="text-orange-500"></span>
           </h1>
           <p className="text-base sm:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
-            Our AI understands your app and your audience, and generates fresh content for you to post on X.
+            Our AI understands your app and your audience, and helps you grow your app.
           </p>
           <div className="flex justify-center space-x-4">
             <a href="/login" className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
@@ -112,7 +109,7 @@ export default function Home() {
           <div className="w-full h-[300px] sm:h-[450px] md:h-[625px] relative rounded-2xl">
             <Image 
               src={resolvedTheme === 'dark' ? "/landing-dark.png" : "/landing-light.png"}
-              alt="Indiepost Content Creation Dashboard" 
+              alt="Indiegrowth Content Creation Dashboard" 
               fill 
               className="object-cover rounded-2xl" 
               priority
@@ -144,13 +141,10 @@ export default function Home() {
       <footer className="border-t border-border px-6 py-12">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <span className="text-orange-500 text-2xl">🔥</span>
-            </div>
-            <span className="font-bold text-foreground">Indiepost</span>
+            <span className="font-bold text-foreground font-mono">Indiegrowth</span>
           </div>
           <div className="text-muted-foreground text-sm text-center sm:text-left">
-            © 2024 Indiepost. Built for creators and makers.
+            © 2024 <span className="font-mono">Indiegrowth</span>. Built for creators and makers.
           </div>
         </div>
       </footer>

@@ -52,14 +52,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-foreground rounded-xl flex items-center justify-center mx-auto mb-6">
-            <SparklesIcon className="w-8 h-8 text-background" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Launch Studio
+          <h1 className="text-3xl font-bold text-foreground mb-2 font-mono">
+            <span className="font-mono">Indiegrowth</span>
           </h1>
           <p className="text-muted-foreground">
-            Marketing platform for indie hackers
+            Platform for indie hackers to grow their app
           </p>
         </div>
 
