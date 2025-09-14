@@ -144,7 +144,7 @@ export default function Home() {
             <span className="font-bold text-foreground font-mono">Indiegrowth</span>
           </div>
           <div className="text-muted-foreground text-sm text-center sm:text-left">
-            © 2024 <span className="font-mono">Indiegrowth</span>. Built for creators and makers.
+            © 2025 <span className="font-mono">Indiegrowth</span>. Built for creators and makers.
           </div>
         </div>
       </footer>
