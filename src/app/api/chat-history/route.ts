@@ -40,9 +40,13 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Create messages with deduplication and ID preservation
-    const messageRecords = await Promise.all(
-      messages.map(async (msg) => {
+    // Create messages with robust error handling and deduplication
+    const messageRecords = [];
+    for (const msg of messages) {
+      try {
+        // Generate a unique ID if not provided or might cause conflicts
+        const messageId = msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
         // Check if an identical message already exists
         const existingMessage = await prisma.message.findFirst({
           where: {
@@ -53,34 +57,59 @@ export async function POST(req: NextRequest) {
           }
         });
 
-        // Only create message if it doesn't already exist
-        if (!existingMessage) {
-          return prisma.message.create({
-            data: {
-              id: msg.id, // Use the provided ID if available
-              chatHistoryId: chatHistory.id,
-              role: msg.role,
-              content: msg.content,
-              isTweet: msg.isTweet || false,
-              createdAt: new Date()
-            }
-          });
+        // If message already exists, skip creation
+        if (existingMessage) {
+          continue;
         }
 
-        return null;
-      })
-    );
+        // Attempt to create the message, handling potential ID conflicts
+        const createdMessage = await prisma.message.upsert({
+          where: { 
+            id: messageId 
+          },
+          update: {
+            // Update if the message with this ID already exists
+            content: msg.content,
+            role: msg.role,
+            isTweet: msg.isTweet || false,
+            chatHistoryId: chatHistory.id
+          },
+          create: {
+            id: messageId,
+            chatHistoryId: chatHistory.id,
+            role: msg.role,
+            content: msg.content,
+            isTweet: msg.isTweet || false,
+            createdAt: new Date()
+          }
+        });
 
-    // Filter out null results (skipped duplicates)
-    const filteredMessageRecords = messageRecords.filter(record => record !== null);
+        messageRecords.push(createdMessage);
+      } catch (error) {
+        // Log specific error details for debugging
+        console.error('Error creating message:', {
+          error,
+          messageId: msg.id,
+          role: msg.role,
+          content: msg.content,
+          errorName: error instanceof Error ? error.name : 'Unknown Error',
+          errorMessage: error instanceof Error ? error.message : 'No error message'
+        });
+      }
+    }
 
     return NextResponse.json({ 
       chatHistory, 
-      messageCount: filteredMessageRecords.length,
-      messageIds: filteredMessageRecords.map(record => record?.id)
+      messageCount: messageRecords.length,
+      messageIds: messageRecords.map(record => record.id)
     }, { status: 200 });
   } catch (error) {
-    console.error('Error saving chat history:', error);
+    console.error('Error saving chat history:', {
+      error,
+      errorName: error instanceof Error ? error.name : 'Unknown Error',
+      errorMessage: error instanceof Error ? error.message : 'No error message'
+    });
+
     return NextResponse.json({ 
       error: 'Failed to save chat history', 
       details: error instanceof Error ? error.message : String(error) 

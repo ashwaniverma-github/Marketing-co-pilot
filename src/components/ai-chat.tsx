@@ -34,6 +34,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
   const { data: session } = useSession();
+
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
     // Create a hash-like ID based on content and role
@@ -198,7 +199,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: messages.map(msg => ({
-              id: msg.id || generateStableMessageId(msg.content, msg.role, msg.isTweet),
+              // Ensure a unique ID is always generated
+              id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               role: msg.role,
               content: msg.content,
               ...(msg.isTweet ? { isTweet: true } : {})
@@ -207,12 +209,21 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         });
 
         const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to save chat history');
+        }
+
         console.log('Chat history save result:', {
           result,
           savedMessageIds: result.messageIds
         });
       } catch (error) {
-        console.error('Failed to save chat history:', error);
+        console.error('Failed to save chat history:', {
+          error,
+          errorName: error instanceof Error ? error.name : 'Unknown Error',
+          errorMessage: error instanceof Error ? error.message : 'No error message'
+        });
       }
     };
 
@@ -221,6 +232,67 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     return () => clearTimeout(timeoutId);
   }, [messages]);
 
+  /**
+   * Streaming-safe markdown formatter
+   * - Only converts completed **bold**, *italic*, and [text](url) pairs.
+   * - When isStreaming === true it strips unmatched trailing markers so users don't see partial '*' artifacts.
+   */
+  const formatStreamingContent = (content: string, isStreaming = false) => {
+    const stripTrailingUnmatchedMarkers = (txt: string) => {
+      let t = txt;
+      if (t.endsWith('*') && !t.endsWith('**')) t = t.slice(0, -1);
+      const doubleStarMatches = t.match(/\*\*/g);
+      const doubleStarCount = doubleStarMatches ? doubleStarMatches.length : 0;
+      if (doubleStarCount % 2 === 1) {
+        const lastIdx = t.lastIndexOf('**');
+        if (lastIdx !== -1) t = t.slice(0, lastIdx) + t.slice(lastIdx + 2);
+      }
+      return t;
+    };
+  
+    let working = content;
+    if (isStreaming) working = stripTrailingUnmatchedMarkers(working);
+  
+    // Bold — use [\s\S] instead of dotAll
+    working = working.replace(/\*\*([\s\S]+?)\*\*/g, (m, g1) => `<BOLD>${g1}</BOLD>`);
+  
+    // Italic — avoid lookbehind by capturing prefix
+    working = working.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, (m, prefix, inner) => {
+      return `${prefix}<ITALIC>${inner}</ITALIC>`;
+    });
+  
+    // Links
+    working = working.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, text, url) => {
+      return `<LINK>${text}|${url}</LINK>`;
+    });
+  
+    const parts = working.split(/(<LINK>.*?<\/LINK>|<BOLD>.*?<\/BOLD>|<ITALIC>.*?<\/ITALIC>)/g);
+  
+    return parts.map((part, index) => {
+      if (part.startsWith('<BOLD>') && part.endsWith('</BOLD>')) {
+        const boldText = part.slice(6, -7);
+        return <strong key={index} className="font-semibold">{boldText}</strong>;
+      } else if (part.startsWith('<ITALIC>') && part.endsWith('</ITALIC>')) {
+        const italicText = part.slice(8, -9);
+        return <em key={index} className="italic">{italicText}</em>;
+      } else if (part.startsWith('<LINK>') && part.endsWith('</LINK>')) {
+        const linkContent = part.slice(6, -7);
+        const [text, url] = linkContent.split('|');
+        return (
+          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">
+            {text}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+  
+
+  // wrapper used by your code
+  const formatContent = (content: string, isStreaming = false) => {
+    return formatStreamingContent(content, isStreaming);
+  };
 
   const send = async () => {
     if (!input.trim()) return;
@@ -250,37 +322,85 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           tweetMode 
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Chat failed');
-      
-      if (tweetMode && data.reply.includes('---TWEET---')) {
-        // Split multiple tweets and create separate messages
-        const tweets = data.reply.split('---TWEET---').map((tweet: string) => tweet.trim()).filter(Boolean);
-        const tweetMessages: ChatMessage[] = tweets.map((tweet: string) => ({
-          role: 'assistant',
-          content: tweet,
-          isTweet: true,
-          id: generateStableMessageId(tweet, 'assistant', true)
-        }));
-        setMessages([...next, ...tweetMessages]);
+
+      if (!res.ok) {
+        throw new Error('Chat failed');
+      }
+
+      // For tweet mode, we'll still use the existing approach
+      if (tweetMode) {
+        const data = await res.text();
+        if (data.includes('---TWEET---')) {
+          // Split multiple tweets and create separate messages
+          const tweets = data.split('---TWEET---').map((tweet: string) => tweet.trim()).filter(Boolean);
+          const tweetMessages: ChatMessage[] = tweets.map((tweet: string) => ({
+            role: 'assistant',
+            content: tweet,
+            isTweet: true,
+            id: generateStableMessageId(tweet, 'assistant', true)
+          }));
+          setMessages([...next, ...tweetMessages]);
+        }
       } else {
-        // For normal AI responses, use typing effect
+        // For streaming responses
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+
+        // Create an assistant message placeholder
         const assistantMessage: ChatMessage = { 
           role: 'assistant', 
-          content: String(data.reply ?? ''),
-          isTweet: false,
-          id: generateStableMessageId(String(data.reply ?? ''), 'assistant')
+          content: '',
+          id: generateStableMessageId('', 'assistant')
         };
-        
-        // Add the message to state first
-        setMessages([...next, assistantMessage]);
-        
-        // Then start typing effect with a small delay for realism
-        setTimeout(() => {
-          typeMessage(String(data.reply ?? ''), () => {
-            // Typing effect completed
+        const updatedMessages = [...next, assistantMessage];
+        setMessages(updatedMessages);
+
+        // Start typing effect
+        setIsTyping(true);
+        setTypingMessage('');
+
+        // Read the streaming response
+        while (true) {
+          const { done, value } = await reader?.read() || {};
+          
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          fullResponse += chunk;
+          
+          // Update the last message with the current response (raw)
+          setMessages(prevMessages => {
+            const updatedMessages = [...prevMessages];
+            const lastMessageIndex = updatedMessages.length - 1;
+            updatedMessages[lastMessageIndex] = {
+              ...updatedMessages[lastMessageIndex],
+              content: fullResponse
+            };
+            return updatedMessages;
           });
-        }, 500);
+
+          // Update typing message for typing effect (this will be rendered with streaming formatting)
+          setTypingMessage(fullResponse);
+        }
+
+        // Finalize the message
+        const finalMessage: ChatMessage = {
+          role: 'assistant',
+          content: fullResponse,
+          id: generateStableMessageId(fullResponse, 'assistant')
+        };
+
+        // Update messages with the final message
+        setMessages(prevMessages => {
+          const finalMessages = [...prevMessages];
+          finalMessages[finalMessages.length - 1] = finalMessage;
+          return finalMessages;
+        });
+
+        // Finalize typing effect
+        setIsTyping(false);
+        setTypingMessage('');
       }
     } catch (e) {
       const errorMessage: ChatMessage = { 
@@ -297,11 +417,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   useEffect(() => {
     autoResizeTextarea();
   }, [autoResizeTextarea]);
-  
-  // Scroll to bottom whenever messages change
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
   
   // Auto-scroll when messages change
   useEffect(() => {
@@ -326,38 +441,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     };
   }, [handleDeleteTweet]); // Add handleDeleteTweet to dependency array
 
-  const formatContent = (content: string) => {
-    // First handle markdown links [text](url)
-    const processedContent = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-      return `<LINK>${text}|${url}</LINK>`;
-    });
-
-    // Then handle **text** to bold
-    const parts = processedContent.split(/(\*\*.*?\*\*|<LINK>.*?<\/LINK>)/g);
-    
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        const boldText = part.slice(2, -2);
-        return <strong key={index} className="font-semibold">{boldText}</strong>;
-      } else if (part.startsWith('<LINK>') && part.endsWith('</LINK>')) {
-        const linkContent = part.slice(6, -7); // Remove <LINK> and </LINK>
-        const [text, url] = linkContent.split('|');
-        return (
-          <a 
-            key={index} 
-            href={url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600 underline"
-          >
-            {text}
-          </a>
-        );
-      }
-      return part;
-    });
-  };
-
   const handleCopyTweet = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -368,7 +451,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     }
   };
 
-    const typeMessage = (message: string, callback: () => void) => {
+  const typeMessage = (message: string, callback: () => void) => {
     setIsTyping(true);
     setTypingMessage('');
     let index = 0;
@@ -385,6 +468,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       }
     }, 25); // Slightly faster for better UX
   };
+
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
     <div className="bg-card border border-gray-300 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
       <div className="flex items-start space-x-3 pt-2">
@@ -477,7 +561,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         <h3 className="text-4xl font-serif text-center  text-foreground pt-16">What's on your mind today?</h3>
       )}
       
-      {/* Content Area (Messages and Tweet Cards) - Scrollable */}
+      {/* Content Area (Messages and Tweet Cards) - Scrollable */} 
       {messages.length > 0 && (
         <div className="flex-1 w-4/5 mx-auto overflow-auto pb-32" style={{ height: 'calc(100vh - 20rem)' }}>
           {/* Regular Messages Section */}
@@ -497,7 +581,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                       {m.role === 'user' ? m.content : (
                         shouldShowTyping ? (
                           <span>
-                            {typingMessage}
+                            {formatContent(typingMessage, true)}
                             <span className="animate-pulse">|</span>
                           </span>
                         ) : (
@@ -580,12 +664,12 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                     </div>
                   </div>
                 ));
-                          })()}
-          </div>
-        )}
-        {/* Invisible element to scroll to */}
-        <div ref={messagesEndRef} />
-      </div>
+              })()}
+            </div>
+          )}
+          {/* Invisible element to scroll to */}
+          <div ref={messagesEndRef} />
+        </div>
       )}
 
       {/* Input Area - Positioned based on conversation state */}
@@ -662,5 +746,3 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     </div>
   );
 }
-
-

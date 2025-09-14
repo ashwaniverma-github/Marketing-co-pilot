@@ -63,7 +63,8 @@ Product Information: ${JSON.stringify(scraped ? {
   httpsEnabled: scraped.httpsEnabled,
 } : {})}`;
 
-    const response = await openai.chat.completions.create({
+    // Create a streaming response
+    const stream = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: system },
@@ -74,10 +75,30 @@ Product Information: ${JSON.stringify(scraped ? {
       ],
       temperature: 0.7,
       max_tokens: 600,
+      stream: true,
     });
 
-    const reply = response.choices[0]?.message?.content || 'No response';
-    return NextResponse.json({ success: true, reply });
+    // Create a readable stream for the response
+    const encoder = new TextEncoder();
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        let fullResponse = '';
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          fullResponse += content;
+          controller.enqueue(encoder.encode(content));
+        }
+        controller.close();
+      }
+    });
+
+    // Return the streaming response
+    return new Response(readableStream, {
+      headers: {
+        'Content-Type': 'text/plain',
+        'Transfer-Encoding': 'chunked',
+      },
+    });
   } catch (e) {
     console.error('Chat error:', e);
     return NextResponse.json({ error: 'Chat failed' }, { status: 500 });
