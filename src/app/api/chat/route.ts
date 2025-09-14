@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Pull context: scraped data for AI chat
     const scraped = await db.scrapedData.findUnique({ where: { appId: productId } });
 
-    const system = `You are a concise marketing assistant. Answer with actionable, platform-ready suggestions.
+    const system = `You are a concise app marketing assistant. Answer with actionable, platform-ready suggestions.
 
 IMPORTANT FORMATTING RULES:
 - Do NOT use emojis unless the user explicitly asks for them
