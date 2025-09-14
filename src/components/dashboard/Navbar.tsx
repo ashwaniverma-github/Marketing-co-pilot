@@ -50,7 +50,7 @@ export function Navbar({
   const user = session?.user;
 
   return (
-    <header className="bg-background/60 dark:bg-card/60 backdrop-blur-md shadow-sm border border-gray-200/50 dark:border-gray-700/30 p-2 rounded-full sm:w-10/16 w-11/12 mx-auto sticky top-4 z-40">
+    <header className="bg-background/60 dark:bg-card/60 backdrop-blur-md shadow-sm border border-gray-200/50 dark:border-gray-700/30 p-2 rounded-full sm:w-10/13 w-11/13 mx-auto sticky top-4 z-40">
       <div className="flex items-center justify-center  ">
         <div className="flex items-center space-x-10">
           

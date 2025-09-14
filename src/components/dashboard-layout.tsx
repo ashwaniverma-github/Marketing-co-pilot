@@ -3,9 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { UserProfile } from './user-profile';
-import { ThemeToggle } from './theme-toggle';
-import { SparklesIcon } from './icons';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -24,8 +21,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center space-x-2">
-          <SparklesIcon className="w-6 h-6 animate-spin" />
-          <span>Loading...</span>
+        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full"></div>
         </div>
       </div>
     );
