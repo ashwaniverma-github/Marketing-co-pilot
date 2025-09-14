@@ -4,18 +4,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { TwitterIcon, CopyIcon, CheckIcon } from './icons';
 import { Forward, Edit } from 'lucide-react';
 import { eventBus, EVENTS } from '@/lib/event-bus';
+import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AiChatProps {
   productId: string;
   productName: string;
   productUrl: string;
-  userProfile?: {
-    name?: string | null;
-    image?: string | null;
-    xUsername?: string | null;
-    xVerified?: boolean;
-  };
   onOpenEditor?: (content: string, onPostSuccess?: () => void) => void;
 }
 
@@ -27,7 +22,7 @@ type ChatMessage = {
   id?: string; 
 };
 
-export function AiChat({ productId, productName, productUrl, userProfile, onOpenEditor }: AiChatProps) {
+export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +33,7 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
-
+  const { data: session } = useSession();
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
     // Create a hash-like ID based on content and role
@@ -79,12 +74,6 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
-
-  // Detect tweet intent (currently unused)
-  // const detectTweetIntent = (text: string) => {
-  //   const tweetKeywords = ['tweet', 'twitter', 'post', 'social media'];
-  //   return tweetKeywords.some(keyword => text.toLowerCase().includes(keyword));
-  // };
 
   // Function to handle tweet deletion
   const handleDeleteTweet = useCallback((tweetContent: string) => {
@@ -232,20 +221,6 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
     return () => clearTimeout(timeoutId);
   }, [messages]);
 
-  // Debug: Log userProfile data
-  useEffect(() => {
-    console.log('AiChat userProfile received:', userProfile);
-    console.log('userProfile.xUsername:', userProfile?.xUsername);
-    console.log('userProfile.xVerified:', userProfile?.xVerified);
-  }, [userProfile]);
-
-  // Function to generate a cuid-like ID similar to Prisma's default
-  // const generateMessageId = () => {
-  //   const prefix = 'cmf'; // Observed prefix in database
-  //   const randomPart = Math.random().toString(36).substring(2, 15);
-  //   const timePart = Date.now().toString(36).substring(2, 10);
-  //   return `${prefix}${randomPart}${timePart}`;
-  // };
 
   const send = async () => {
     if (!input.trim()) return;
@@ -318,31 +293,6 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
       setLoading(false);
     }
   };
-
-  // const detectTweetIntent = (text: string) => {
-  //   const tweetKeywords = ['tweet', 'twitter', 'post', 'social media'];
-  //   return tweetKeywords.some(keyword => text.toLowerCase().includes(keyword));
-  // };
-
-  // const autoResizeTextarea = () => {
-  //   if (textareaRef.current) {
-  //     // Reset to minimum height first to properly measure content
-  //     textareaRef.current.style.height = '60px';
-      
-  //     // If there's no content, keep minimum height
-  //     if (!input.trim()) {
-  //       textareaRef.current.style.height = '60px';
-  //       return;
-  //     }
-      
-  //     // Calculate new height based on content
-  //     const scrollHeight = textareaRef.current.scrollHeight;
-  //     const maxHeight = 120; // Maximum height before scrolling
-  //     const minHeight = 60; // Minimum height
-  //     const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
-  //     textareaRef.current.style.height = `${newHeight}px`;
-  //   }
-  // };
 
   useEffect(() => {
     autoResizeTextarea();
@@ -435,82 +385,26 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
       }
     }, 25); // Slightly faster for better UX
   };
-
-  // Function to handle tweet deletion
-  // const handleDeleteTweet = (tweetContent: string) => {
-  //   // Find the message with the matching content
-  //   const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
-    
-  //   if (!tweetToDelete) {
-  //     console.warn('Tweet not found for deletion:', { 
-  //       tweetContent, 
-  //       messages: messages.filter(m => m.isTweet).map(m => ({
-  //         content: m.content,
-  //         id: m.id,
-  //         isTweet: m.isTweet
-  //       }))
-  //     });
-  //     return;
-  //   }
-
-  //   console.log('Tweet to delete:', {
-  //     content: tweetToDelete.content,
-  //     id: tweetToDelete.id,
-  //     isTweet: tweetToDelete.isTweet
-  //   });
-
-  //   // Send delete request to backend
-  //   const deleteTweet = async () => {
-  //     try {
-  //       // Ensure we have an ID
-  //       if (!tweetToDelete.id) {
-  //         console.error('No ID found for tweet:', tweetToDelete);
-  //         return;
-  //       }
-
-  //       const response = await fetch('/api/chat-history', {
-  //         method: 'DELETE',
-  //         headers: {
-  //           'Content-Type': 'application/json'
-  //         },
-  //         body: JSON.stringify({
-  //           messageId: tweetToDelete.id
-  //         })
-  //       });
-
-  //       const responseData = await response.json();
-
-  //       if (!response.ok) {
-  //         console.error('Delete tweet error response:', responseData);
-  //         throw new Error(responseData.error || 'Failed to delete tweet');
-  //       }
-
-  //       // Remove the tweet from messages
-  //       const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
-  //       setMessages(updatedMessages);
-  //     } catch (error) {
-  //       console.error('Error deleting tweet:', error);
-  //       // Optionally show an error toast or notification
-  //     }
-  //   };
-
-  //   deleteTweet();
-  // };
-
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
     <div className="bg-card border border-gray-300 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
       <div className="flex items-start space-x-3 pt-2">
         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {userProfile?.image ? (
+          {(session as any)?.xAvatar ? (
             <img 
-              src={userProfile.image} 
-              alt={userProfile.name || 'User'} 
+              src={(session as any).xAvatar} 
+              alt={(session as any).xDisplayName || 'User'} 
+              className="w-full h-full object-cover"
+            />
+          ) : session?.user?.image ? (
+            <img 
+              src={session?.user?.image} 
+              alt={session?.user?.name || 'User'} 
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full bg-foreground flex items-center justify-center">
               <span className="text-background font-medium text-sm">
-                {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                {(session as any)?.xDisplayName ? (session as any).xDisplayName.charAt(0).toUpperCase() : 'U'}
               </span>
             </div>
           )}
@@ -519,9 +413,9 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <span className="font-semibold text-foreground">
-                {userProfile?.name || 'User'}
+                {(session as any)?.xDisplayName || session?.user?.name || 'User'}
               </span>
-              {userProfile?.xVerified && (
+              {(session as any)?.xVerified && (
                 <span className="text-blue-500">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.818.915-3.474 2.25c-.415-.166-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.656 1.335 1.964 2.25 3.474 2.25s2.818-.915 3.474-2.25c.415.164.865.25 1.335.25 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/>
@@ -530,8 +424,8 @@ export function AiChat({ productId, productName, productUrl, userProfile, onOpen
               )}
               
               <span className="text-muted-foreground text-sm">
-                {userProfile?.xUsername ? (
-                  <>@{userProfile.xUsername}</>
+                {(session as any)?.xUsername ? (
+                  <>@{(session as any).xUsername}</>
                 ) : (
                   <span className="text-muted-foreground/60">Connect X to customize</span>
                 )}

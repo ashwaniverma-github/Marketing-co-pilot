@@ -120,8 +120,11 @@ export function Navbar({
                     />
                   </button>
                 ) : (
-                  <button className="w-9 h-9 bg-foreground rounded-xl flex items-center justify-center text-background font-medium text-sm hover:bg-foreground/90 transition-all">
-                    {user.name?.[0]?.toUpperCase() || 'U'}
+                  <button className="w-9 h-9 rounded-full overflow-hidden hover:opacity-90 transition-opacity border border-border">
+                    <img 
+                    src={session?.user?.image || ''}
+                    alt={session?.user?.name || 'User'} 
+                    className="w-full h-full object-cover" />
                   </button>
                 )}
               </DropdownMenuTrigger>

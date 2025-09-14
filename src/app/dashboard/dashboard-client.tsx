@@ -572,12 +572,12 @@ export default function DashboardClient() {
                   productId={selectedProduct.id}
                   productName={selectedProduct.name}
                   productUrl={selectedProduct.url}
-                  userProfile={{
-                    name: session?.user?.name,
-                    image: (session as any)?.xAvatar || session?.user?.image,
-                    xUsername: (session as any)?.xUsername,
-                    xVerified: (session as any)?.xVerified,
-                  }}
+                  // userProfile={{
+                  //   name: session?.user?.name,
+                  //   image: (session as any)?.xAvatar || session?.user?.image,
+                  //   xUsername: (session as any)?.xUsername,
+                  //   xVerified: (session as any)?.xVerified,
+                  // }}
                   onOpenEditor={(content, onPostSuccess) => {
                     // First close any existing editor to ensure clean state
                     setShowPostEditor(false);

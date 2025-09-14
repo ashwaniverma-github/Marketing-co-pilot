@@ -72,7 +72,13 @@ export function TweetCardEditor({
       <div className="flex items-start space-x-3 p-4">
         {/* User Avatar */}
         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {session?.user?.image ? (
+          {(session as any)?.xAvatar ? (
+            <img 
+              src={(session as any).xAvatar} 
+              alt={session?.user?.name || 'User'} 
+              className="w-full h-full object-cover"
+            />
+          ) : session?.user?.image ? (
             <img 
               src={session.user.image} 
               alt={session.user.name || 'User'} 
@@ -92,7 +98,7 @@ export function TweetCardEditor({
           {/* User Info */}
           <div className="flex items-center space-x-2 mb-2">
             <span className="font-semibold text-foreground">
-              {session?.user?.name || 'User'}
+              {(session as any)?.xDisplayName || session?.user?.name || 'User'}
             </span>
             {(session as any)?.xVerified && (
               <span className="text-blue-500">
