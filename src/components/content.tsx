@@ -27,7 +27,7 @@ export default function Content({
   setShowConnectXModal: (show: boolean) => void 
 }) {
   return (
-    <div className=" relative h-[calc(100vh-7rem)] overflow-y-auto space-y-6 sm:w-10/10.5 w-11/12 mx-auto bg-background">
+    <div className="space-y-6 sm:w-10/10.5 w-11/12 mx-auto relative h-[calc(100vh-7rem)] overflow-y-auto scrollbar-hide bg-background">
       {/* Connection Status */}
       <div className="bg-card border rounded-xl p-4 mt-6">
         <div className="flex items-center justify-between">

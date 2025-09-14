@@ -30,9 +30,7 @@ export default function PricingPage() {
 
         {/* Pricing Card */}
         <div className="max-w-md mx-auto bg-background border rounded-2xl p-6 shadow-lg">
-          <div className="absolute top-0 right-0 m-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm">
-            Best Value
-          </div>
+          
           <h2 className="text-3xl font-bold text-foreground mb-4">
             Indiegrowth Pro
           </h2>
@@ -85,7 +83,7 @@ export default function PricingPage() {
             <span className="font-bold text-foreground font-mono">Indiegrowth</span>
           </div>
           <div className="text-muted-foreground text-sm">
-            © 2024 <span className="font-mono">Indiegrowth</span>. Built to grow your app.
+            © 2025 <span className="font-mono">Indiegrowth</span>. Built to grow your app.
           </div>
         </div>
       </footer>

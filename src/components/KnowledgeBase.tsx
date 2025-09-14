@@ -172,7 +172,7 @@ export default function KnowledgeBase({ productId }: { productId: string }) {
   return (
     <>
       <Toaster />
-      <div className=" relative h-[calc(100vh-7rem)] overflow-y-auto space-y-6 p-6 bg-background sm:w-10/10 w-11/12 mx-auto px-10 ">
+      <div className=" relative h-[calc(100vh-7rem)] overflow-y-auto space-y-6 p-6 bg-background sm:w-10/10 w-11/12 mx-auto px-10 scrollbar-hide">
         <div className="border-b pb-4 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-semibold text-foreground">{scrapedData.name} Knowledge Base</h2>

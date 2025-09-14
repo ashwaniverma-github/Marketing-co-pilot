@@ -470,7 +470,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
-    <div className="bg-card border border-gray-300 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
+    <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-3 w-full hover:shadow-sm transition-shadow relative">
       <div className="flex items-start space-x-3 pt-2">
         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
           {(session as any)?.xAvatar ? (
@@ -558,12 +558,12 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     <div className="relative h-[calc(100vh-7rem)] flex flex-col">
       {/* Only show the welcome message when there are no messages */}
       {messages.length === 0 && (
-        <h3 className="text-4xl font-serif text-center  text-foreground pt-16">What's on your mind today?</h3>
+        <h3 className="text-4xl font-serif text-center text-foreground pt-16">What's on your mind today?</h3>
       )}
       
       {/* Content Area (Messages and Tweet Cards) - Scrollable */} 
       {messages.length > 0 && (
-        <div className="flex-1 w-4/5 mx-auto overflow-auto pb-32" style={{ height: 'calc(100vh - 20rem)' }}>
+        <div className="flex-1 w-11/12 p-2 sm:w-4/5 mx-auto overflow-auto pb-32 scrollbar-hide" style={{ height: 'calc(100vh - 20rem)' }}>
           {/* Regular Messages Section */}
           <div className="space-y-3 mb-6">
             {messages.map((m, i) => {
@@ -625,7 +625,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           {/* Tweet Cards Section - Now above the input area */}
           {messages.filter(m => m.isTweet).length > 0 && (
             <div className="space-y-6 mb-4">
-              {/* Group tweets by user query */}
               {(() => {
                 const tweetMessages = messages.filter(m => m.isTweet);
                 const groups: ChatMessage[][] = [];
@@ -673,30 +672,27 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       )}
 
       {/* Input Area - Positioned based on conversation state */}
-      <div className={`${messages.length === 0 ? 'flex flex-col justify-center flex-1 sm:w-4/5 w-11/12 mx-auto' : ' sm:w-4/5 w-11/12 mx-auto absolute bottom-0 left-0 right-0'} bg-background`}>
-        {/* Tweet Mode Toggle */}
-        <div className="px-4 pt-2">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setTweetMode(!tweetMode)}
-              className={`flex items-center space-x-2 px-3 py-1 rounded-xl border transition-all ${
-                tweetMode 
-                  ? ' bg-cyan-950 text-white ' 
-                  : 'bg-background text-foreground border-border hover:bg-muted'
-              }`}
-            >
-              <TwitterIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">Tweet Mode</span>
-            </button>
-            {tweetMode && (
-              <span className="text-sm text-muted-foreground">Responses will be formatted as tweets</span>
-            )}
-          </div>
-        </div>
-        
-        {/* Input Textarea */}
-        <div className="mx-4 pt-4 pb-2">
-          <div className="relative flex">
+      <div className="w-11/12 sm:w-4/5 mx-auto absolute bottom-0 left-0 right-0">
+        {/* Input wrapper */}
+        <div className="mx-auto rounded-lg bg-background">
+          <div className="relative flex items-center rounded-full border-gray-300 border-2 dark:border-0">
+            {/* Tweet mode pill placed inside the input area on the left */}
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20">
+              <button
+                onClick={() => setTweetMode((s) => !s)}
+                aria-pressed={tweetMode}
+                className={`flex items-center space-x-2 px-3 py-1 rounded-xl border transition-all text-sm select-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-600 ${
+                  tweetMode
+                    ? 'bg-cyan-950 text-white border-transparent'
+                    : 'dark:bg-gray-700 text-foreground border-border hover:bg-muted'
+                }`}
+              >
+                <TwitterIcon className="w-4 h-4" />
+                <span className="font-medium">Tweet</span>
+              </button>
+            </div>
+
+            {/* Textarea - add left padding so the pill doesn't overlap the text */}
             <textarea
               ref={textareaRef}
               value={input}
@@ -708,16 +704,18 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                 }
               }}
               placeholder={`Ask about ${productName}...`}
-              className=" w-full px-8 py-3 bg-background border-2 border-cyan-950 rounded-full focus:outline-none focus:ring-0 focus:border-4 focus:border-cyan-950 focus:shadow-none transition-all resize-none"
-              style={{ 
-                outline: 'none', 
+              className="w-full pl-30 pt-4 sm:pl-40 sm:pr-20 sm:py-3 bg-background rounded-full focus:outline-none focus:ring-0 focus:border-4 transition-all resize-none"
+              style={{
+                outline: 'none',
                 boxShadow: 'none',
-                borderColor: '#164e63',
+                borderColor: 'transparent',
                 verticalAlign: 'middle',
                 textAlign: 'start',
-                height: '60px'
+                height: '60px',
               }}
             />
+
+            {/* Loading / Send button on the right */}
             <button
               onClick={send}
               disabled={loading || !input.trim()}
@@ -727,14 +725,21 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               {loading ? (
                 <div className="animate-spin w-10 h-10 border-2 border-current border-t-transparent rounded-full flex items-center justify-center"></div>
               ) : (
-                <Forward className="w-10 h-10 text-white bg-cyan-950 rounded-xl p-2 font-bold" />
+                <div className="w-10 h-10 bg-cyan-950 rounded-xl p-2 flex items-center justify-center">
+                  <Forward className="text-white w-full h-full" />
+                </div>
               )}
             </button>
           </div>
+
+          {/* Optional small label when tweet mode is on
+          {tweetMode && (
+            <div className="mt-2 ml-2 text-sm text-muted-foreground">Responses will be formatted as tweets</div>
+          )} */}
         </div>
       </div>
 
-      {/* Toast Notification */}
+      {/* Toast Notification */} 
       {showToast && (
         <div className="fixed bottom-4 right-4 bg-foreground text-background px-4 py-2 rounded-lg shadow-lg transition-all z-50">
           <div className="flex items-center space-x-2">
