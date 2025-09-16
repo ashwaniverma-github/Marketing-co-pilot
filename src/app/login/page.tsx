@@ -1,18 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
 
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [isTwitterLoading, setIsTwitterLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
-  // Demo login removed
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
 
   const handleTwitterLogin = async () => {
     setIsTwitterLoading(true);
