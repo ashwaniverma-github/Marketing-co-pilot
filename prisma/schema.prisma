@@ -14,7 +14,6 @@ model User {
   avatar           String?
   timezone         String          @default("UTC")
   plan             Plan            @default(FREE)
-  stripeCustomerId String?         @unique
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   emailVerified    DateTime?
@@ -25,8 +24,69 @@ model User {
   sessions         Session[]
   socialAccounts   SocialAccount[]
   chatHistories    ChatHistory[]
+  subscription     Subscription?
+  payments         Payment[]
 
   @@map("users")
+}
+
+model Subscription {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status            SubscriptionStatus @default(INACTIVE)
+  tier              Plan               @default(FREE)
+  
+  dodoCustomerId  String?
+  dodoSubscriptionId String?
+  
+  startDate         DateTime          @default(now())
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  
+  cancelAtPeriodEnd Boolean          @default(false)
+  canceledAt        DateTime?
+  
+  trialStart        DateTime?
+  trialEnd          DateTime?
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  payments          Payment[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  userId            String
+  subscriptionId    String?
+  
+  dodoPaymentId     String   @unique
+  amount            Int      // Amount in cents
+  currency          String
+  status            String
+  paymentMethod     String?
+  
+  createdAt         DateTime @default(now())
+  processedAt       DateTime?
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
+  
+  @@map("payments")
+}
+
+enum SubscriptionStatus {
+  INACTIVE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
 }
 
 model Account {

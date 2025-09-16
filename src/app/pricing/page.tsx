@@ -1,9 +1,77 @@
 "use client";
-
-import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+type Product = {
+  product_id: number;
+  name: string;
+  description: string;
+  price: number;
+  is_recurring: boolean;
+};
 
 export default function PricingPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  async function handleCheckout() {
+    if (status !== "authenticated") {
+      router.push("/login");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/dodo/products`, {
+        cache: 'no-store'
+      });
+
+      const products = await response.json();
+      console.log("products", products);
+      
+      const productId = products.map((product:any)=> product.product_id )
+
+      console.log("productId", productId);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/dodo/checkout/subscription?productId=${encodeURIComponent(productId)}`, {
+        method: "GET",
+        credentials: "include", // ensure cookies are sent
+        headers: { "Accept": "application/json" }
+      });
+  
+      // not authenticated server-side -> redirect to login on client
+      if (res.status === 401) {
+        const body = await res.json().catch(() => ({}));
+        const loginUrl = body?.loginUrl ?? `/login?callbackUrl=${encodeURIComponent(window.location.href)}`;
+        window.location.href = loginUrl;
+        return;
+      }
+  
+      const body = await res.json();
+  
+      if (!res.ok) {
+        console.error("Checkout creation failed", body);
+        // show user-friendly error (toast/modal) instead
+        alert(body?.error ? `Checkout failed: ${body.error}` : "Checkout failed. See console.");
+        return;
+      }
+  
+      const checkoutUrl = body.checkoutUrl;
+      if (!checkoutUrl) {
+        console.error("No checkout URL returned", body);
+        alert("No checkout URL returned by server. See console for details.");
+        return;
+      }
+  
+      // Redirect browser to provider checkout URL
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Checkout failed. See console for details.");
+    }
+  }
+  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -15,9 +83,6 @@ export default function PricingPage() {
           <div className="flex items-center space-x-6">
             <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
             <Link href="/pricing" className="text-foreground font-semibold">Pricing</Link>
-            <Link href="/dashboard" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
-              Get Started
-            </Link>
           </div>
         </div>
       </nav>
@@ -30,7 +95,6 @@ export default function PricingPage() {
 
         {/* Pricing Card */}
         <div className="max-w-md mx-auto bg-background border rounded-2xl p-6 shadow-lg">
-          
           <h2 className="text-3xl font-bold text-foreground mb-4">
             Indiegrowth Pro
           </h2>
@@ -67,12 +131,12 @@ export default function PricingPage() {
               No Commitment, Cancel Anytime
             </li>
           </ul>
-          <Link 
-            href="/dashboard" 
+          <button 
+            onClick={handleCheckout}
             className="block w-full text-center bg-foreground text-background py-4 rounded-lg hover:bg-foreground/90 text-lg font-semibold"
           >
-            Start Your Growth Journey
-          </Link>
+            {status === "authenticated" ? "Start Your Growth Journey" : "Signin to buy"}
+          </button>
         </div>
       </section>
 

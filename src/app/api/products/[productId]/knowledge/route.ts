@@ -31,7 +31,6 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    console.log(`Found product: ${JSON.stringify(product)}`);
 
     // Fetch the ScrapedData for the associated App
     const scrapedData = await prisma.scrapedData.findFirst({
@@ -50,8 +49,6 @@ export async function GET(
         ]
       }
     });
-
-    console.log(`Scraped Data Query Result: ${JSON.stringify(scrapedData)}`);
 
     if (!scrapedData) {
       // Log all ScrapedData entries to help diagnose
