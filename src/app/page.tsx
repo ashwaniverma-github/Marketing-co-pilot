@@ -27,7 +27,7 @@ export default function Home() {
             <div className="ml-4">
               <ThemeToggle />
             </div>
-            <a href="/dashboard" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
+            <a href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
               Get Started
             </a>
           </div>
@@ -64,7 +64,7 @@ export default function Home() {
               <div className="flex items-center space-x-4">
                 <ThemeToggle />
                 <a 
-                  href="/dashboard" 
+                  href="/login" 
                   className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -128,7 +128,7 @@ export default function Home() {
           <p className="text-base sm:text-xl text-muted-foreground mb-8">
             Join thousands of indie hackers who are growing their app with our AI.
           </p>
-          <a href="/dashboard" className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
+          <a href="/login" className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
             Get Started<span className="ml-1">→</span>
           </a>
           <p className="text-muted-foreground mt-4 text-sm sm:text-base">
