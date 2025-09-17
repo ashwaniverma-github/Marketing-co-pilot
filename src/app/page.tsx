@@ -28,7 +28,7 @@ export default function Home() {
               <ThemeToggle />
             </div>
             <a href="/dashboard" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
-              Get Started for Free
+              Get Started
             </a>
           </div>
 
@@ -68,7 +68,7 @@ export default function Home() {
                   className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Get Started for Free
+                  Get Started
                 </a>
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function Home() {
           </p>
           <div className="flex justify-center space-x-4">
             <a href="/login" className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
-              Get Started for Free
+              Get Started
             </a>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function Home() {
             Join thousands of indie hackers who are growing their app with our AI.
           </p>
           <a href="/dashboard" className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
-            Get Started For Free <span className="ml-1">→</span>
+            Get Started<span className="ml-1">→</span>
           </a>
           <p className="text-muted-foreground mt-4 text-sm sm:text-base">
             No credit card required • Cancel anytime

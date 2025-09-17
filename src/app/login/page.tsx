@@ -55,7 +55,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 border-3 rounded-2xl p-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-foreground mb-2 font-mono">
             <span className="font-mono">Indiegrowth</span>
@@ -106,8 +106,10 @@ export default function LoginPage() {
             )}
           </Button>
 
-          {/* Twitter OAuth Login */}
-          <Button
+          <h1 className="text-center text-md font-semibold text-muted-foreground">We are working to add more login options soon</h1>
+
+          {/* Twitter OAuth Login disabled for now  */}
+          {/* <Button
             onClick={handleTwitterLogin}
             disabled={isTwitterLoading || isLoading}
             className="w-full bg-black cursor-pointer hover:bg-black-600 text-white"
@@ -129,7 +131,7 @@ export default function LoginPage() {
                 Continue with X (Twitter)
               </>
             )}
-          </Button>
+          </Button> */}
 
         </div>
 
