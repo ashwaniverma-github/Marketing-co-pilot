@@ -231,40 +231,66 @@ async function refreshTwitterTokenPrisma(account: {
     headers['Authorization'] = `Basic ${basic}`;
   }
 
-  const res = await fetch(tokenUrl, {
-    method: 'POST',
-    headers,
-    body: body.toString(),
-  });
+  try {
+    const res = await fetch(tokenUrl, {
+      method: 'POST',
+      headers,
+      body: body.toString(),
+    });
 
-  const json = await res.json();
-  if (!res.ok) {
-    console.error('Twitter token refresh failed:', json);
-    throw new Error(json.error_description || json.error || 'Failed to refresh Twitter token');
-  }
+    const json = await res.json();
 
-  // expected keys: access_token, expires_in (seconds), refresh_token (maybe), scope
-  const newAccessToken: string = json.access_token;
-  const newRefreshToken: string = json.refresh_token ?? account.refresh_token;
-  const expiresIn = json.expires_in ? Number(json.expires_in) : null;
-  const newExpiresAt = expiresIn ? Math.floor(Date.now() / 1000) + expiresIn : null;
+    // Log full response for debugging
+    console.log('Twitter token refresh response:', {
+      status: res.status,
+      body: json,
+      headers: Object.fromEntries(res.headers.entries())
+    });
 
-  // Persist new tokens in Prisma
-  await db.account.update({
-    where: { id: account.id },
-    data: {
+    if (!res.ok) {
+      console.error('Twitter token refresh failed:', {
+        status: res.status,
+        error: json.error,
+        error_description: json.error_description,
+        refresh_token_length: account.refresh_token?.length,
+        client_id_length: process.env.TWITTER_CLIENT_ID?.length
+      });
+
+      // Specific error handling
+      if (json.error === 'invalid_request' || json.error === 'invalid_grant') {
+        // This likely means the refresh token is no longer valid
+        throw new Error('Refresh token is invalid. Please reconnect your X account.');
+      }
+
+      throw new Error(json.error_description || json.error || 'Failed to refresh Twitter token');
+    }
+
+    // expected keys: access_token, expires_in (seconds), refresh_token (maybe), scope
+    const newAccessToken: string = json.access_token;
+    const newRefreshToken: string = json.refresh_token ?? account.refresh_token;
+    const expiresIn = json.expires_in ? Number(json.expires_in) : null;
+    const newExpiresAt = expiresIn ? Math.floor(Date.now() / 1000) + expiresIn : null;
+
+    // Persist new tokens in Prisma
+    await db.account.update({
+      where: { id: account.id },
+      data: {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        scope: json.scope ?? account.scope,
+        expires_at: newExpiresAt ?? null, // Prisma Int? field
+      },
+    });
+
+    return {
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
-      scope: json.scope ?? account.scope,
-      expires_at: newExpiresAt ?? null, // Prisma Int? field
-    },
-  });
-
-  return {
-    access_token: newAccessToken,
-    refresh_token: newRefreshToken,
-    expires_at: newExpiresAt
-  };
+      expires_at: newExpiresAt
+    };
+  } catch (error) {
+    console.error('Unexpected error during Twitter token refresh:', error);
+    throw error;
+  }
 }
 
 
