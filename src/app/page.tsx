@@ -125,15 +125,15 @@ export default function Home() {
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
             Ready to grow your app?
           </h2>
-          <p className="text-base sm:text-xl text-muted-foreground mb-8">
+          {/* <p className="text-base sm:text-xl text-muted-foreground mb-8">
             Join thousands of indie hackers who are growing their app with our AI.
-          </p>
+          </p> */}
           <a href="/login" className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
             Get Started<span className="ml-1">→</span>
           </a>
-          <p className="text-muted-foreground mt-4 text-sm sm:text-base">
-            No credit card required • Cancel anytime
-          </p>
+          {/* <p className="text-muted-foreground mt-4 text-sm sm:text-base">
+            Just Signin and Start Growing Your App
+          </p> */}
         </div>
       </section>
 
