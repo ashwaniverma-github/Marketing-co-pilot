@@ -1,7 +1,8 @@
 "use client";
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
 
 type Product = {
   product_id: number;
@@ -83,6 +84,7 @@ export default function PricingPage() {
           <div className="flex items-center space-x-6">
             <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
             <Link href="/pricing" className="text-foreground font-semibold">Pricing</Link>
+            {session ? <button className="font-semibold"  onClick={() => signOut()}>Logout</button> : <button className="font-semibold" onClick={() => router.push('/login')}>Login</button>}
           </div>
         </div>
       </nav>
