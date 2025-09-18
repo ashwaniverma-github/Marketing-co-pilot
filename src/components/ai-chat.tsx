@@ -140,9 +140,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   // Load chat history on component mount
   useEffect(() => {
     const loadChatHistory = async () => {
-      try {
-        console.log('Loading most recent chat history');
-        
+      try {        
         const response = await fetch('/api/chat-history', {
           method: 'GET',
           headers: {
@@ -150,10 +148,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           }
         });
         
-        console.log('Chat history response status:', response.status);
-        
         const data = await response.json();
-        console.log('Chat history response data:', JSON.stringify(data, null, 2));
         
         // Validate messages is an array of chat messages
         if (Array.isArray(data.messages) && 
@@ -162,7 +157,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               m.role && ['user', 'assistant'].includes(m.role) && 
               m.content && typeof m.content === 'string'
             )) {
-          console.log('Setting messages from chat history:', data.messages);
+          
           // Generate stable IDs for messages
           const messagesWithStableIds = data.messages.map((m: ChatMessage) => ({
             ...m,
@@ -192,7 +187,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
 
     const saveChatHistory = async () => {
       try {
-        console.log('Saving chat history:', messages);
         
         const response = await fetch('/api/chat-history', {
           method: 'POST',
@@ -214,10 +208,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           throw new Error(result.error || 'Failed to save chat history');
         }
 
-        console.log('Chat history save result:', {
-          result,
-          savedMessageIds: result.messageIds
-        });
+        
       } catch (error) {
         console.error('Failed to save chat history:', {
           error,
