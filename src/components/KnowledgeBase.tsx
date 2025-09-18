@@ -117,6 +117,7 @@ export default function KnowledgeBase({ productId }: { productId: string }) {
     field: keyof ScrapedProductData, 
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    // Preserve the entire input value, including spaces
     setEditedData(prev => ({
       ...prev,
       [field]: e.target.value
@@ -129,19 +130,16 @@ export default function KnowledgeBase({ productId }: { productId: string }) {
   ) => {
     const value = e.target.value;
     
-    // Use a more sophisticated parsing method
+    // Completely preserve input, including all spaces
     const arrayValue = value
-      // First, split by newline to support multi-line input
+      // Split by newline to support multi-line input
       .split('\n')
-      // Then trim each line and filter out empty lines
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      // If a line contains a comma, keep it intact
-      .map(line => line.replace(/,\s*/g, '|COMMA|'));
+      // Remove only completely empty lines
+      .filter(line => line.length > 0);
     
     setEditedData(prev => ({
       ...prev,
-      [field]: arrayValue.map(item => item.replace(/\|COMMA\|/g, ', '))
+      [field]: arrayValue
     }));
   };
 
