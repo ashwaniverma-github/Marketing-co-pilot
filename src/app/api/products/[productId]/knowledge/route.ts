@@ -115,11 +115,13 @@ export async function PUT(
             create: {
               title: otherKnowledge.title || '',
               url: otherKnowledge.url || '',
+              description: description || '',
               pricing: pricing || [],
               paymentMethods: paymentMethods || [],
               ...otherKnowledge
             },
             update: {
+              description: description || undefined,
               pricing: pricing || undefined,
               paymentMethods: paymentMethods || undefined,
               ...otherKnowledge
