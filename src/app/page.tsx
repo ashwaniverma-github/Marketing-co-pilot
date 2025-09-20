@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import MuxPlayer from "@mux/mux-player-react"; 
 
 export default function Home() {
   const { resolvedTheme } = useTheme();
@@ -93,17 +94,21 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="w-full h-[300px] sm:h-[450px] md:h-[625px] relative rounded-2xl overflow-hidden shadow-lg">
-            <video 
-              className="absolute inset-0 w-full h-full object-cover"
-              src="/IndieGrowth demo.mp4"
-              // poster={resolvedTheme === 'dark' ? "/landing-dark.png" : "/landing-light.png"}
-              controls
-              preload="metadata"
-            >
-              <source src="/demo-video.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+          <div className="flex justify-center items-center">
+          <MuxPlayer
+              playbackId="P01Jq4xow01iJwXwK6QHaJGUwb8a3czkQCpg5VkAzZD5A"
+              style={{height: '100%', width: '90%'}}
+              metadata={{
+              video_id: "video-id-54321",
+              video_title: "Indiegrowth Demo",
+              viewer_user_id: "user-id-007",
+              }}
+              autoPlay={true}
+              loop={true}
+              muted={true}
+              className='rounded-2xl overflow-hidden shadow-lg'
+              
+            />
           </div>
         </div>
       </section>
