@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function TermsOfServicePage() {
@@ -13,14 +14,14 @@ export default function TermsOfServicePage() {
           </div>
           
           <div className="flex items-center space-x-6">
-            <a href="/" className="text-muted-foreground hover:text-foreground">Home</a>
-            <a href="/about" className="text-muted-foreground hover:text-foreground">About</a>
+            <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+            <Link href="/about" className="text-muted-foreground hover:text-foreground">About</Link>
             <div className="ml-4">
               <ThemeToggle />
             </div>
-            <a href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
+            <Link href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
               Get Started
-            </a>
+            </Link>
           </div>
         </div>
       </nav>

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   const { resolvedTheme } = useTheme();
@@ -133,16 +134,16 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="/about" className="text-muted-foreground hover:text-foreground">About</a></li>
-                <li><a href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</a></li>
-                <li><a href="/login" className="text-muted-foreground hover:text-foreground">Login</a></li>
+                <li><Link href="/about" className="text-muted-foreground hover:text-foreground">About</Link></li>
+                <li><Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link></li>
+                <li><Link href="/login" className="text-muted-foreground hover:text-foreground">Login</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-foreground mb-4">Legal</h4>
               <ul className="space-y-2">
-                <li><a href="/terms" className="text-muted-foreground hover:text-foreground">Terms of Service</a></li>
-                <li><a href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</a></li>
+                <li><Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>

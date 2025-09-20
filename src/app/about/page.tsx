@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function AboutPage() {
@@ -14,14 +14,14 @@ export default function AboutPage() {
           </div>
           
           <div className="flex items-center space-x-6">
-            <a href="/" className="text-muted-foreground hover:text-foreground">Home</a>
-            <a href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</a>
+            <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+            <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <div className="ml-4">
               <ThemeToggle />
             </div>
-            <a href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
+            <Link href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
               Get Started
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
