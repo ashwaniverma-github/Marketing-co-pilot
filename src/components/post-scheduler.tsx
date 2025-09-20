@@ -110,7 +110,7 @@ export function PostScheduler({ posts, onEdit, onDelete, onPublish, onToggleSche
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-semibold text-foreground">{scheduledCount}</p>
-              <p className="text-muted-foreground text-sm">Scheduled</p>
+              <p className="text-muted-foreground text-sm">Scheduled (upcoming)</p>
             </div>
             <Clock className="w-8 h-8 text-blue-500" />
           </div>

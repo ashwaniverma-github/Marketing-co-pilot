@@ -93,15 +93,17 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="w-full h-[300px] sm:h-[450px] md:h-[625px] relative rounded-2xl">
-            <Image 
-              src={resolvedTheme === 'dark' ? "/landing-dark.png" : "/landing-light.png"}
-              alt="Indiegrowth Content Creation Dashboard" 
-              fill 
-              className="object-cover rounded-2xl" 
-              priority
-            />
-            <div className="absolute inset-0 rounded-2xl"></div>
+          <div className="w-full h-[300px] sm:h-[450px] md:h-[625px] relative rounded-2xl overflow-hidden shadow-lg">
+            <video 
+              className="absolute inset-0 w-full h-full object-cover"
+              src="/IndieGrowth demo.mp4"
+              // poster={resolvedTheme === 'dark' ? "/landing-dark.png" : "/landing-light.png"}
+              controls
+              preload="metadata"
+            >
+              <source src="/demo-video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
       </section>
@@ -121,6 +123,157 @@ export default function Home() {
           {/* <p className="text-muted-foreground mt-4 text-sm sm:text-base">
             Just Signin and Start Growing Your App
           </p> */}
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="px-6 py-20 bg-muted/20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
+              Powerful Features for Indie Developers
+            </h2>
+            <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Indiegrowth provides a comprehensive AI designed to accelerate your app's growth and marketing efforts.
+            </p>
+          </div>
+
+          {/* Feature 1: AI Content Creation */}
+          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+            <div className="order-2 md:order-1">
+              <h3 className="text-2xl font-semibold text-foreground mb-4">
+                AI Content Creation
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Our AI create Tweets for your app and you can post them directly on X (Twitter)
+              </p>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  You can create Tweets for your app
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Chat to the AI to get more ideas
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Interact with the Knowledge Base to train the AI
+                </li>
+              </ul>
+            </div>
+            <div className="order-1 md:order-2 rounded-xl">
+              <div className="w-full aspect-video">
+                <Image 
+                  src="/tweet-page.png"
+                  alt="AI Content Creation Dashboard" 
+                  layout="responsive"
+                  width={1920} 
+                  height={1080}
+                  className="rounded-xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 2: Content Management */}
+          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+            <div className="rounded-xl">
+              <div className="w-full aspect-video">
+                <Image 
+                  src="/Content-management.png"
+                  alt="Content Management Dashboard" 
+                  layout="responsive"
+                  width={1920} 
+                  height={1080}
+                  className="rounded-xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground mb-4">
+                Content Management dashboard for X (Twitter)
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                You can create, manage posts for your app on X (Twitter)
+              </p>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Write and manage posts for your app
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Content Management
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Feature 3: Knowledge Base */}
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <h3 className="text-2xl font-semibold text-foreground mb-4">
+                Knowledge Base
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Provide data to the AI to train it about your app and its features 
+              </p>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  AI understands your app and its features
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Retention optimization
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Personalized growth recommendations
+                </li>
+              </ul>
+            </div>
+            <div className="order-1 md:order-2 rounded-xl">
+              <div className="w-full aspect-video">
+                <Image 
+                  src="/knowledge-base.png"
+                  alt="Knowledge Base Dashboard" 
+                  layout="responsive"
+                  width={1920} 
+                  height={1080}
+                  className="rounded-xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

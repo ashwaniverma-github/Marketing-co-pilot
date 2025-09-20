@@ -413,7 +413,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
           </div>
 
           {/* Scheduling */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-foreground mb-3">Schedule</label>
             <div className="flex items-center space-x-3">
               <Button
@@ -452,7 +452,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Actions */}
