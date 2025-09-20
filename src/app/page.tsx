@@ -22,6 +22,7 @@ export default function Home() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-muted-foreground hover:text-foreground">Features</a>
+            <a href="/about" className="text-muted-foreground hover:text-foreground">About</a>
             <a href="/pricing" className="text-muted-foreground font-semibold hover:text-foreground">Pricing</a>
             
             <div className="ml-4">
@@ -45,31 +46,16 @@ export default function Home() {
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-background border-b border-border shadow-lg">
-            <div className="flex flex-col items-center space-y-4 py-6 px-4">
-              <a 
-                href="#features" 
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Features
+          <div className="md:hidden absolute top-full left-0 right-0 bg-background border-t border-border shadow-lg">
+            <div className="flex flex-col items-center py-4 space-y-4">
+              <a href="#features" className="text-foreground">Features</a>
+              <a href="/about" className="text-foreground">About</a>
+              <a href="/pricing" className="text-foreground">Pricing</a>
+              <a href="/login" className="bg-foreground text-background px-6 py-2 rounded-full">
+                Get Started
               </a>
-              <a 
-                href="/pricing" 
-                className="text-muted-foreground font-semibold hover:text-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Pricing
-              </a>
-              <div className="flex items-center space-x-4">
+              <div>
                 <ThemeToggle />
-                <a 
-                  href="/login" 
-                  className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Get Started
-                </a>
               </div>
             </div>
           </div>
@@ -138,13 +124,32 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-12">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-foreground font-mono">Indiegrowth</span>
+      <footer className="bg-muted/50 py-12 mt-12">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="font-bold text-foreground mb-4">Indiegrowth</h3>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li><a href="/about" className="text-muted-foreground hover:text-foreground">About</a></li>
+                <li><a href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</a></li>
+                <li><a href="/login" className="text-muted-foreground hover:text-foreground">Login</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="/terms" className="text-muted-foreground hover:text-foreground">Terms of Service</a></li>
+                <li><a href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="text-muted-foreground text-sm text-center sm:text-left">
-            © 2025 <span className="font-mono">Indiegrowth</span>. Built for creators and makers.
+          <div className="border-t border-border mt-8 pt-6 text-center">
+            <p className="text-muted-foreground text-sm">
+              © {new Date().getFullYear()} Indiegrowth. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
