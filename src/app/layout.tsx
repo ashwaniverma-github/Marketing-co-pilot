@@ -15,8 +15,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Indiegrowth - Your App's Growth Co-Pilot",
-  description: "Just Give Us The Url Of Your App And We Will Handle The Rest",
+  metadataBase: new URL('https://indiegrowth.app'),
+  title: {
+    default: "Indiegrowth - Your App's Growth Co-Pilot",
+    template: "%s | Indiegrowth"
+  },
+  description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+  keywords: ["app growth", "startup", "product analytics", "growth hacking"],
+  authors: [{ name: "Indiegrowth Team" }],
+  creator: "ashwani",
+  publisher: "Indiegrowth",
+  verification: {
+    google: 'yiYpoh2nQF0BXHgGHh-CdOyIivMuK4kZtHZn7hf0TDs'
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://indiegrowth.app",
+    title: "Indiegrowth - Your App's Growth Co-Pilot",
+    description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+    siteName: "Indiegrowth",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Indiegrowth - Your App's Growth Co-Pilot",
+    description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+    creator: "@indiegrowth"
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
+  },
 };
 
 export default function RootLayout({
