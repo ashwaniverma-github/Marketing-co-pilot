@@ -35,12 +35,21 @@ export const metadata: Metadata = {
     title: "Indiegrowth - Your App's Growth Co-Pilot",
     description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
     siteName: "Indiegrowth",
+    images: [
+      {
+        url: '/social-preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'Indiegrowth - Your App\'s Growth Co-Pilot',
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
     title: "Indiegrowth - Your App's Growth Co-Pilot",
     description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
-    creator: "@indiegrowth"
+    creator: "@indiegrowth",
+    images: ['/social-preview.png']
   },
   robots: {
     index: true,
