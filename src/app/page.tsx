@@ -171,7 +171,7 @@ export default function Home() {
 
           {/* Feature 1: AI Content Creation */}
           <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
-            <div className="order-2 md:order-1">
+            <div>
               <h3 className="text-2xl font-semibold text-foreground mb-4">
                 AI Content Creation
               </h3>
@@ -184,25 +184,18 @@ export default function Home() {
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
-                  You can create Tweets for your app
+                  AI generates tweets for your app
                 </li>
                 <li className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
-                  Chat to the AI to get more ideas
-                </li>
-                <li className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  Interact with the Knowledge Base to train the AI
+                  Post directly to X (Twitter)
                 </li>
               </ul>
             </div>
-            <div className="order-1 md:order-2 rounded-xl">
+            <div className="rounded-xl">
               <div className="w-full aspect-video">
                 <Image 
                   src="/tweet-page.png"
@@ -222,7 +215,7 @@ export default function Home() {
             <div className="rounded-xl">
               <div className="w-full aspect-video">
                 <Image 
-                  src="/Content-management.png"
+                  src="/text-editor.png"
                   alt="Content Management Dashboard" 
                   layout="responsive"
                   width={1920} 
@@ -234,10 +227,38 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-semibold text-foreground mb-4">
-                Content Management dashboard for X (Twitter)
+                Rich Text Editor
               </h3>
               <p className="text-muted-foreground mb-6">
-                You can create, manage posts for your app on X (Twitter)
+                You can create, manage posts for your app on X (Twitter) with our rich text editor
+              </p>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Write posts for your app with our rich text editor
+                </li>
+                <li className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 text-cyan-600">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  Save in draft
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Feature 3: Content Management */}
+          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground mb-4">
+              Content Management dashboard for X (Twitter)
+              </h3>
+              <p className="text-muted-foreground mb-6">
+              You can create, manage posts for your app on X (Twitter)
               </p>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-center">
@@ -256,11 +277,37 @@ export default function Home() {
                 </li>
               </ul>
             </div>
+            <div className="rounded-xl">
+              <div className="w-full aspect-video">
+                <Image 
+                  src="/Content-management.png"
+                  alt="Advanced Content Editing Dashboard" 
+                  layout="responsive"
+                  width={1920} 
+                  height={1080}
+                  className="rounded-xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Feature 3: Knowledge Base */}
+          {/* Feature 4: Knowledge Base */}
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
+            <div className="rounded-xl">
+              <div className="w-full aspect-video">
+                <Image 
+                  src="/knowledge-base.png"
+                  alt="Knowledge Base Dashboard" 
+                  layout="responsive"
+                  width={1920} 
+                  height={1080}
+                  className="rounded-xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
+            <div>
               <h3 className="text-2xl font-semibold text-foreground mb-4">
                 Knowledge Base
               </h3>
@@ -290,19 +337,6 @@ export default function Home() {
                   Personalized growth recommendations
                 </li>
               </ul>
-            </div>
-            <div className="order-1 md:order-2 rounded-xl">
-              <div className="w-full aspect-video">
-                <Image 
-                  src="/knowledge-base.png"
-                  alt="Knowledge Base Dashboard" 
-                  layout="responsive"
-                  width={1920} 
-                  height={1080}
-                  className="rounded-xl object-cover"
-                  priority
-                />
-              </div>
             </div>
           </div>
         </div>
