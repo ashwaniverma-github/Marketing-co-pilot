@@ -69,7 +69,7 @@ export default function Home() {
       <section className="min-h-screen px-6 flex items-center justify-center relative pt-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Launch Offer Banner */}
-          <div className=" dark:bg-orange-900/30 rounded-xl px-6 py-4 mb-8 max-w-2xl mx-auto flex items-center justify-center space-x-4">
+          <div className=" dark:bg-orange-900/30 rounded-xl px-2 py-4 mb-8 max-w-2xl mx-auto flex items-center justify-center space-x-4">
             <span className="text-orange-800 dark:text-orange-200 font-bold text-sm sm:text-base">
               🚀 Launch Offer: 30% OFF for First 10 Members! Use code
             </span>
@@ -79,9 +79,9 @@ export default function Home() {
                 setIsCopied(true);
                 setTimeout(() => setIsCopied(false), 2000);
               }}
-              className="cursor-pointer group relative"
+              className="cursor-pointer group relative m-2 flex-shrink-0"
             >
-              <code className={`bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-100 px-3 py-1 rounded-md text-xs sm:text-sm font-mono group-hover:bg-orange-300 dark:group-hover:bg-orange-700 transition-colors duration-200 ${
+              <code className={`bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-100 px-2  rounded-md text-xs sm:text-sm font-mono group-hover:bg-orange-300 dark:group-hover:bg-orange-700 transition-colors duration-200 ${
                 isCopied 
                   ? 'animate-pulse bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100' 
                   : ''
