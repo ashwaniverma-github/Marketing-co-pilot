@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://indiegrowth.app'),
+  metadataBase: new URL(SITE),
   title: {
     default: "Indiegrowth - Your App's Growth Co-Pilot",
     template: "%s | Indiegrowth"
@@ -33,12 +33,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico' },
-      // { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      // { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
     ],
-    // apple: [
-    //   { url: '/apple-touch-icon.png' }
-    // ]
   },
   openGraph: {
     type: "website",
@@ -49,10 +44,11 @@ export const metadata: Metadata = {
     siteName: "Indiegrowth",
     images: [
       {
-        url: `${SITE}/social-preview.png`,
+        // absolute URL + cache-bust query string
+        url: `${SITE}/social-preview.png?v=2`,
         width: 1200,
         height: 630,
-        alt: 'Indiegrowth - Your App\'s Growth Co-Pilot',
+        alt: "Indiegrowth - Your App's Growth Co-Pilot",
       }
     ]
   },
@@ -61,7 +57,8 @@ export const metadata: Metadata = {
     title: "Indiegrowth - Your App's Growth Co-Pilot",
     description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
     creator: "@indiegrowth",
-    images: [`${SITE}/social-preview.png`]
+    // explicit absolute URL with query string to force refetch
+    images: [`${SITE}/social-preview.png?v=2`]
   },
   robots: {
     index: true,
@@ -83,6 +80,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* Optional: explicit meta tags as a Twitter fallback */}
+      <head>
+        <meta name="twitter:image" content={`${SITE}/social-preview.png?v=2`} />
+        <meta name="twitter:image:src" content={`${SITE}/social-preview.png?v=2`} />
+        <meta property="og:image" content={`${SITE}/social-preview.png?v=2`} />
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
