@@ -4,6 +4,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next"
 
+const SITE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://indiegrowth.app";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -41,13 +43,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://indiegrowth.app",
+    url: SITE,
     title: "Indiegrowth - Your App's Growth Co-Pilot",
     description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
     siteName: "Indiegrowth",
     images: [
       {
-        url: '/social-preview.png',
+        url: `${SITE}/social-preview.png`,
         width: 1200,
         height: 630,
         alt: 'Indiegrowth - Your App\'s Growth Co-Pilot',
@@ -59,7 +61,7 @@ export const metadata: Metadata = {
     title: "Indiegrowth - Your App's Growth Co-Pilot",
     description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
     creator: "@indiegrowth",
-    images: ['/social-preview.png']
+    images: [`${SITE}/social-preview.png`]
   },
   robots: {
     index: true,
