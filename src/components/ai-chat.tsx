@@ -35,6 +35,33 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const isInitialLoad = useRef(true);
   const { data: session } = useSession();
 
+  // State to manage dropdown menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Function to toggle dropdown menu
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click is outside the menu
+      const menuElement = document.getElementById('chat-options-menu');
+      if (menuElement && !menuElement.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
     // Create a hash-like ID based on content and role
@@ -135,6 +162,49 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     };
 
     deleteTweet();
+  }, [messages]);
+
+  // Function to clear all chat messages
+  const handleClearAllChats = useCallback(() => {
+    // Send delete request to backend for all messages
+    const clearChats = async () => {
+      try {
+        // Filter out messages that have an ID (to be deleted)
+        const messagesToDelete = messages.filter(m => m.id);
+
+        // If no messages to delete, return early
+        if (messagesToDelete.length === 0) return;
+
+        // Batch delete messages
+        for (const message of messagesToDelete) {
+          const response = await fetch('/api/chat-history', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              messageId: message.id
+            })
+          });
+
+          const responseData = await response.json();
+
+          if (!response.ok) {
+            console.error('Delete chat error response:', responseData);
+            throw new Error(responseData.error || 'Failed to delete chat');
+          }
+        }
+
+        // Clear all messages from the state
+        setMessages([]);
+      } catch (error) {
+        console.error('Error clearing chats:', error);
+        // Show an error toast or notification
+        alert('Failed to clear chats. Please try again.');
+      }
+    };
+
+    clearChats();
   }, [messages]);
 
   // Load chat history on component mount
@@ -545,6 +615,41 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     </div>
   );
 
+  // State for confirmation modal
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // Confirmation Modal Component
+  const ConfirmModal = () => (
+    <div className="bg-background rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-lg p-4">
+      <div className="p-4 text-center">
+        <div className="mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 text-red-500 w-9 h-9">
+            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+          </svg>
+          <h3 className="text-base font-semibold text-foreground mb-2">Clear All Chats</h3>
+          <p className="text-muted-foreground text-sm">Are you sure you want to clear all chats?</p>
+        </div>
+        <div className="flex justify-center space-x-3">
+          <button 
+            onClick={() => setIsConfirmModalOpen(false)}
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg text-foreground text-sm"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={() => {
+              handleClearAllChats();
+              setIsConfirmModalOpen(false);
+            }}
+            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative h-[calc(100vh-7rem)] flex flex-col">
       {/* Only show the welcome message when there are no messages */}
@@ -555,6 +660,46 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       {/* Content Area (Messages and Tweet Cards) - Scrollable */} 
       {messages.length > 0 && (
         <div className="flex-1 w-11/12 p-2 sm:w-4/5 mx-auto overflow-auto pb-32 scrollbar-hide" style={{ height: 'calc(100vh - 20rem)' }}>
+          {/* Chat Options Menu */}
+          {messages.length > 0 && (
+            <div className="absolute top-0 -translate-y-1/8 right-0 z-50">
+              <div className="relative" id="chat-options-menu">
+                <button 
+                  onClick={toggleMenu}
+                  className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                  aria-label="Chat Options"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-horizontal">
+                    <circle cx="12" cy="12" r="1"/>
+                    <circle cx="19" cy="12" r="1"/>
+                    <circle cx="5" cy="12" r="1"/>
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-30 bg-background border rounded-lg shadow-lg z-50 overflow-hidden">
+                    <button 
+                      onClick={() => {
+                        setIsConfirmModalOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-2 hover:bg-muted text-red-600 dark:text-red-400 flex justify-center items-center space-x-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        <line x1="10" x2="10" y1="11" y2="17" />
+                        <line x1="14" x2="14" y1="11" y2="17" />
+                      </svg>
+                      <span>delete</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {/* Regular Messages Section */}
           <div className="space-y-3 mb-6">
             {messages.map((m, i) => {
@@ -566,8 +711,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               const shouldShowTyping = isLatestAIResponse && isTyping;
               
               return (
-                <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-                  <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'}`}>
+                <div key={i} className={`${m.role === 'user' ? 'text-right' : 'text-left'} relative`}>
+                  <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'} relative`}>
                     <div className="whitespace-pre-wrap break-words">
                       {m.role === 'user' ? m.content : (
                         shouldShowTyping ? (
@@ -580,6 +725,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                         )
                       )}
                     </div>
+                    {/* Removed individual delete buttons */}
                   </div>
                 </div>
               );
@@ -737,6 +883,13 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             <CheckIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Copied!</span>
           </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {isConfirmModalOpen && (
+        <div className="absolute top-0 -translate-y-1/8 bottom-0 left-0 right-0 flex items-center justify-center z-50">
+          <ConfirmModal />
         </div>
       )}
     </div>
