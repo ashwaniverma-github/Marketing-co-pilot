@@ -701,7 +701,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             </div>
           )}
           {/* Regular Messages Section */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-6 overflow-y-hidden">
             {messages.map((m, i) => {
               // Skip tweet messages as they're displayed separately
               if (m.isTweet) return null;
