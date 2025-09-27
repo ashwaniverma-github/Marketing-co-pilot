@@ -537,7 +537,7 @@ export default function DashboardClient() {
       />
 
       {/* Main Content */}
-      <main className="transition-all duration-300 p-4 lg:p-1  max-w-6xl mx-auto">
+      <main className="transition-all duration-300 max-w-6xl mx-auto">
           {!selectedProduct ? (
             /* Empty State */
             <div className="max-w-2xl mx-auto text-center py-16">
