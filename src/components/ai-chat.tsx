@@ -64,8 +64,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
 
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
-    // Create a hash-like ID based on content and role
-    const baseString = `${role}-${content}-${isTweet || false}`;
+    // Use a combination of content, role, and timestamp for more unique ID
+    const baseString = `${role}-${content}-${isTweet || false}-${Date.now()}`;
     let hash = 0;
     for (let i = 0; i < baseString.length; i++) {
       const char = baseString.charCodeAt(i);
@@ -73,8 +73,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       hash = hash & hash; // Convert to 32-bit integer
     }
     
-    // Prefix with 'cmf' to match database ID format
-    return `cmf${Math.abs(hash).toString(36)}`;
+    // Prefix with 'msg' to match database ID format and add more uniqueness
+    return `msg_${Math.abs(hash).toString(36)}`;
   };
 
   // Memoize functions to prevent unnecessary re-renders
@@ -263,8 +263,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: messages.map(msg => ({
-              // Ensure a unique ID is always generated
-              id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              // Always generate a consistent ID
+              id: msg.id || generateStableMessageId(msg.content, msg.role, msg.isTweet),
               role: msg.role,
               content: msg.content,
               ...(msg.isTweet ? { isTweet: true } : {})
