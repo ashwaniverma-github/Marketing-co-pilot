@@ -809,7 +809,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       )}
 
       {/* Input Area - Positioned based on conversation state */}
-      <div className="w-11/12 sm:w-4/5 mx-auto absolute bottom-0 left-0 right-0">
+      <div className="  p-2 fixed bg-background bottom-0 left-0 right-0 sm:w-11/17 w-11/12 mx-auto">
         {/* Input wrapper */}
         <div className="mx-auto rounded-lg bg-background">
           <div className="relative flex items-center rounded-full border-gray-300 border-2 dark:border-0">
