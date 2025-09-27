@@ -651,7 +651,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   );
 
   return (
-    <div className=" relative  sm:h-[calc(100vh-6.5rem)] h-[calc(100vh-8rem)] flex flex-col">
+    <div className="relative h-[calc(100vh-8rem)] sm:h-[calc(100vh-6.5rem)] flex flex-col overflow-hidden">
       {/* Only show the welcome message when there are no messages */}
       {messages.length === 0 && (
         <h3 className="text-4xl font-serif text-center text-foreground pt-16">What's on your mind today?</h3>
@@ -659,7 +659,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       
       {/* Content Area (Messages and Tweet Cards) - Scrollable */} 
       {messages.length > 0 && (
-        <div className="flex-1 w-11/12 p-2 sm:w-4/5 mx-auto overflow-auto pb-32 scrollbar-hide" style={{ height: 'calc(100vh - 20rem)' }}>
+        <div className="flex-1 w-11/12 p-2 sm:w-4/5 mx-auto overflow-auto pb-32 scrollbar-hide relative" style={{ height: 'calc(100vh - 14rem)' }}>
           {/* Chat Options Menu */}
           {messages.length > 0 && (
             <div className="absolute top-0 -translate-y-1/8 right-0 z-50">
@@ -701,7 +701,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             </div>
           )}
           {/* Regular Messages Section */}
-          <div className="space-y-3 mb-6 overflow-y-hidden">
+          <div className="space-y-3 mb-6">
             {messages.map((m, i) => {
               // Skip tweet messages as they're displayed separately
               if (m.isTweet) return null;
@@ -808,8 +808,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         </div>
       )}
 
-      {/* Input Area - Positioned based on conversation state */}
-      <div className="  p-2 fixed bg-background bottom-0 left-0 right-0 sm:w-11/17 w-11/12 mx-auto">
+      {/* Input Area - Positioned at the bottom */}
+      <div className="p-2 bg-background absolute bottom-0 left-0 right-0 w-11/12 sm:w-4/5 mx-auto z-40">
         {/* Input wrapper */}
         <div className="mx-auto rounded-lg bg-background">
           <div className="relative flex items-center rounded-full border-gray-300 border-2 dark:border-0">
@@ -868,11 +868,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               )}
             </button>
           </div>
-
-          {/* Optional small label when tweet mode is on
-          {tweetMode && (
-            <div className="mt-2 ml-2 text-sm text-muted-foreground">Responses will be formatted as tweets</div>
-          )} */}
         </div>
       </div>
 
