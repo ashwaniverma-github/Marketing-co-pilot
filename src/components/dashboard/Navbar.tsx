@@ -51,7 +51,7 @@ export function Navbar({
 
   return (
     <header className="bg-background dark:bg-card/60  shadow-sm border border-gray-200/50 dark:border-gray-700/30 p-2 rounded-full sm:w-10/13 mx-1 sm:mx-auto mt-4 sm:mt-0 sm:sticky top-4 z-40 ">
-      <div className="flex items-center justify-center   ">
+      <div className="flex items-center justify-center">
         <div className="flex items-center  sm:space-x-10">
           
           <span className="hidden md:block font-bold text-foreground font-mono">Indiegrowth - Your App's Growth Co-Pilot</span>
@@ -97,10 +97,10 @@ export function Navbar({
           {products.length === 0 && (
             <button
               onClick={() => setShowAddProductModal(true)}
-              className="flex items-center space-x-2 bg-foreground text-background px-4 py-1.5 rounded-lg hover:bg-foreground/90 font-medium transition-all"
+              className="flex items-center space-x-2 bg-foreground text-background mx-2 p-1 rounded-lg hover:bg-foreground/90 font-medium transition-all"
             >
+              <span>Add Product</span>
               <PlusIcon className="w-4 h-4" />
-              <span>Add Your First Product</span>
             </button>
           )}
         </div>
