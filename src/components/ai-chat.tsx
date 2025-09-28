@@ -445,7 +445,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
-    <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-2 w-full hover:shadow-sm transition-shadow relative">
+    <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
       <div className="flex items-start space-x-2 py-2">
         <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
           {(session as any)?.xAvatar ? (
