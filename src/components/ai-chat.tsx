@@ -651,7 +651,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   );
 
   return (
-    <div className="relative h-[calc(100vh-8rem)] sm:h-[calc(100vh-6.5rem)] flex flex-col overflow-hidden">
+    <div className="relative sm:h-[calc(100vh-6.5rem)] flex flex-col sm:overflow-hidden">
       {/* Only show the welcome message when there are no messages */}
       {messages.length === 0 && (
         <h3 className="text-4xl font-serif text-center text-foreground pt-16">What's on your mind today?</h3>

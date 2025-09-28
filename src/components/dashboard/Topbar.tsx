@@ -21,7 +21,7 @@ export function Topbar({
   tabs,
 }: TopbarProps) {
   return (
-    <div className="w-full sticky  top-[4.5rem] z-30">
+    <div className="w-full sm:sticky top-[4.5rem] z-30">
       {/* Horizontal Navigation Bar */}
       <div className=" mx-auto flex justify-center mb-4">
         <div className="flex justify-between items-center">
