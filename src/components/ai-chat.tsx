@@ -531,9 +531,9 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
-    <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-3 w-full hover:shadow-sm transition-shadow relative">
-      <div className="flex items-start space-x-3 pt-2">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+    <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-2 w-full hover:shadow-sm transition-shadow relative">
+      <div className="flex items-start space-x-2 py-2">
+        <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
           {(session as any)?.xAvatar ? (
             <img 
               src={(session as any).xAvatar} 
@@ -548,16 +548,16 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             />
           ) : (
             <div className="w-full h-full bg-foreground flex items-center justify-center">
-              <span className="text-background font-medium text-sm">
+              <span className="text-background font-medium  text-sm">
                 {(session as any)?.xDisplayName ? (session as any).xDisplayName.charAt(0).toUpperCase() : 'U'}
               </span>
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between ">
             <div className="flex items-center space-x-2">
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-foreground text-sm sm:text-base">
                 {(session as any)?.xDisplayName || session?.user?.name || 'User'}
               </span>
               {(session as any)?.xVerified && (
@@ -584,32 +584,36 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               >
                 <CopyIcon className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
-              <button
-                onClick={() => onOpenEditor?.(content, () => handleDeleteTweet(content))}
-                className="px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-2 transform"
-                title="Open in Editor"
-              >
-                <Edit className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">Edit</span>
-              </button>
             </div>
           </div>
           <div className="text-foreground whitespace-pre-wrap break-words leading-relaxed">{formatContent(content)}</div>
           
           {/* Delete button in bottom right corner */}
-          <button
-            onClick={() => handleDeleteTweet(content)}
-            className="absolute bottom-3 right-3 p-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-full transition-colors text-red-600 dark:text-red-400"
-            title="Delete tweet"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              <line x1="10" x2="10" y1="11" y2="17" />
-              <line x1="14" x2="14" y1="11" y2="17" />
-            </svg>
-          </button>
+          <div className="flex items-center py-4 justify-between">
+            <button
+              onClick={() => handleDeleteTweet(content)}
+              className=" bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-full transition-colors text-red-600 dark:text-red-400"
+              title="Delete tweet"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                <line x1="10" x2="10" y1="11" y2="17" />
+                <line x1="14" x2="14" y1="11" y2="17" />
+              </svg>
+            </button>
+
+            <button
+                  onClick={() => onOpenEditor?.(content, () => handleDeleteTweet(content))}
+                  className=" rounded-lg transition-colors flex items-center space-x-2 transform"
+                  title="Open in Editor"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Edit</span>
+            </button>
+          </div>
+          
         </div>
       </div>
     </div>
