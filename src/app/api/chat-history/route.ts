@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 });
     }
 
-    // Find or create chat history
+    // Find or create chat history using a unique session identifier
     const chatHistory = await prisma.chatHistory.upsert({
       where: {
         userId_sessionId: {
           userId: session.user.id,
-          sessionId: session.user.id
+          sessionId: session.user.id + '_chat' // Add a suffix to differentiate from other potential session uses
         }
       },
       update: {
@@ -35,32 +35,16 @@ export async function POST(req: NextRequest) {
       },
       create: {
         userId: session.user.id,
-        sessionId: session.user.id,
+        sessionId: session.user.id + '_chat',
         updatedAt: new Date()
       }
     });
 
-    // Create messages with robust error handling and deduplication
     const messageRecords = [];
     for (const msg of messages) {
       try {
         // Generate a unique ID if not provided or might cause conflicts
         const messageId = msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        // Check if an identical message already exists
-        const existingMessage = await prisma.message.findFirst({
-          where: {
-            chatHistoryId: chatHistory.id,
-            role: msg.role,
-            content: msg.content,
-            isTweet: msg.isTweet || false
-          }
-        });
-
-        // If message already exists, skip creation
-        if (existingMessage) {
-          continue;
-        }
 
         // Attempt to create the message, handling potential ID conflicts
         const createdMessage = await prisma.message.upsert({
@@ -86,9 +70,8 @@ export async function POST(req: NextRequest) {
 
         messageRecords.push(createdMessage);
       } catch (error) {
-        // Log specific error details for debugging
+        // Silently handle individual message creation errors
         console.error('Error creating message:', {
-          error,
           messageId: msg.id,
           role: msg.role,
           content: msg.content,
@@ -99,13 +82,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ 
-      chatHistory, 
+      chatHistory,
       messageCount: messageRecords.length,
       messageIds: messageRecords.map(record => record.id)
-    }, { status: 200 });
+    });
   } catch (error) {
     console.error('Error saving chat history:', {
-      error,
       errorName: error instanceof Error ? error.name : 'Unknown Error',
       errorMessage: error instanceof Error ? error.message : 'No error message'
     });
@@ -127,7 +109,8 @@ export async function GET(_req: NextRequest) { // Use underscore for unused para
     // Find the most recent chat history for the user
     const chatHistory = await prisma.chatHistory.findFirst({
       where: {
-        userId: session.user.id
+        userId: session.user.id,
+        sessionId: session.user.id + '_chat'  // Use the same session identifier pattern
       },
       orderBy: {
         updatedAt: 'desc'
@@ -142,8 +125,6 @@ export async function GET(_req: NextRequest) { // Use underscore for unused para
         }
       }
     });
-
-    console.log('Most recent chat history:', JSON.stringify(chatHistory, null, 2));
 
     if (!chatHistory) {
       return NextResponse.json({ messages: [] }, { status: 200 });
@@ -162,7 +143,6 @@ export async function GET(_req: NextRequest) { // Use underscore for unused para
       chatHistoryId: chatHistory.id
     }, { status: 200 });
   } catch (error) {
-    console.error('Error retrieving chat history:', error);
     return NextResponse.json({ 
       error: 'Failed to retrieve chat history', 
       details: error instanceof Error ? error.message : String(error) 

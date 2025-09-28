@@ -551,7 +551,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                         )
                       )}
                     </div>
-                    {/* Removed individual delete buttons */}
                   </div>
                 </div>
               );
