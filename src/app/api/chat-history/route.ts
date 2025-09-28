@@ -143,6 +143,8 @@ export async function GET(_req: NextRequest) { // Use underscore for unused para
       }
     });
 
+    console.log('Most recent chat history:', JSON.stringify(chatHistory, null, 2));
+
     if (!chatHistory) {
       return NextResponse.json({ messages: [] }, { status: 200 });
     }

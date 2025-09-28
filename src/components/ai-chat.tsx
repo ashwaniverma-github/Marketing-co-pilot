@@ -35,46 +35,19 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const isInitialLoad = useRef(true);
   const { data: session } = useSession();
 
-  // State to manage dropdown menu
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // Function to toggle dropdown menu
-  const toggleMenu = useCallback(() => {
-    setIsMenuOpen(prev => !prev);
-  }, []);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if the click is outside the menu
-      const menuElement = document.getElementById('chat-options-menu');
-      if (menuElement && !menuElement.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    // Cleanup
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
-    // Use a combination of content, role, and timestamp for more unique ID
-    const baseString = `${role}-${content}-${isTweet || false}-${Date.now()}`;
+    // Create a hash-like ID based on content and role
+    const baseString = `${role}-${content}-${isTweet || false}`;
     let hash = 0;
     for (let i = 0; i < baseString.length; i++) {
       const char = baseString.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
-    // Prefix with 'msg' to match database ID format and add more uniqueness
-    return `msg_${Math.abs(hash).toString(36)}`;
+
+    // Prefix with 'cmf' to match database ID format
+    return `cmf${Math.abs(hash).toString(36)}`;
   };
 
   // Memoize functions to prevent unnecessary re-renders
@@ -82,13 +55,13 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     if (textareaRef.current) {
       // Reset to minimum height first to properly measure content
       textareaRef.current.style.height = '60px';
-      
+
       // If there's no content, keep minimum height
       if (!input.trim()) {
         textareaRef.current.style.height = '60px';
         return;
       }
-      
+
       // Calculate new height based on content
       const scrollHeight = textareaRef.current.scrollHeight;
       const maxHeight = 120; // Maximum height before scrolling
@@ -107,31 +80,16 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const handleDeleteTweet = useCallback((tweetContent: string) => {
     // Find the message with the matching content
     const tweetToDelete = messages.find(m => m.isTweet && m.content === tweetContent);
-    
+
     if (!tweetToDelete) {
-      console.warn('Tweet not found for deletion:', { 
-        tweetContent, 
-        messages: messages.filter(m => m.isTweet).map(m => ({
-          content: m.content,
-          id: m.id,
-          isTweet: m.isTweet
-        }))
-      });
       return;
     }
-
-    console.log('Tweet to delete:', {
-      content: tweetToDelete.content,
-      id: tweetToDelete.id,
-      isTweet: tweetToDelete.isTweet
-    });
 
     // Send delete request to backend
     const deleteTweet = async () => {
       try {
         // Ensure we have an ID
         if (!tweetToDelete.id) {
-          console.error('No ID found for tweet:', tweetToDelete);
           return;
         }
 
@@ -148,7 +106,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         const responseData = await response.json();
 
         if (!response.ok) {
-          console.error('Delete tweet error response:', responseData);
           throw new Error(responseData.error || 'Failed to delete tweet');
         }
 
@@ -156,70 +113,26 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         const updatedMessages = messages.filter(m => !(m.isTweet && m.content === tweetContent));
         setMessages(updatedMessages);
       } catch (error) {
-        console.error('Error deleting tweet:', error);
-        // Optionally show an error toast or notification
+        // Silently handle errors
       }
     };
 
     deleteTweet();
   }, [messages]);
 
-  // Function to clear all chat messages
-  const handleClearAllChats = useCallback(() => {
-    // Send delete request to backend for all messages
-    const clearChats = async () => {
-      try {
-        // Filter out messages that have an ID (to be deleted)
-        const messagesToDelete = messages.filter(m => m.id);
-
-        // If no messages to delete, return early
-        if (messagesToDelete.length === 0) return;
-
-        // Batch delete messages
-        for (const message of messagesToDelete) {
-          const response = await fetch('/api/chat-history', {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              messageId: message.id
-            })
-          });
-
-          const responseData = await response.json();
-
-          if (!response.ok) {
-            console.error('Delete chat error response:', responseData);
-            throw new Error(responseData.error || 'Failed to delete chat');
-          }
-        }
-
-        // Clear all messages from the state
-        setMessages([]);
-      } catch (error) {
-        console.error('Error clearing chats:', error);
-        // Show an error toast or notification
-        alert('Failed to clear chats. Please try again.');
-      }
-    };
-
-    clearChats();
-  }, [messages]);
-
   // Load chat history on component mount
   useEffect(() => {
     const loadChatHistory = async () => {
-      try {        
+      try {
         const response = await fetch('/api/chat-history', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        
+
         // Validate messages is an array of chat messages
         if (Array.isArray(data.messages) && 
             data.messages.length > 0 && 
@@ -227,18 +140,15 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               m.role && ['user', 'assistant'].includes(m.role) && 
               m.content && typeof m.content === 'string'
             )) {
-          
           // Generate stable IDs for messages
           const messagesWithStableIds = data.messages.map((m: ChatMessage) => ({
             ...m,
             id: m.id || generateStableMessageId(m.content, m.role, m.isTweet)
           }));
           setMessages(messagesWithStableIds);
-        } else {
-          console.warn('Invalid messages format:', data.messages);
         }
       } catch (error) {
-        console.error('Failed to load chat history:', error);
+        // Silently handle errors
       } finally {
         isInitialLoad.current = false;
       }
@@ -257,14 +167,15 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
 
     const saveChatHistory = async () => {
       try {
-        
+        console.log('Saving chat history:', messages);
+
         const response = await fetch('/api/chat-history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: messages.map(msg => ({
-              // Always generate a consistent ID
-              id: msg.id || generateStableMessageId(msg.content, msg.role, msg.isTweet),
+              // Ensure a unique ID is always generated
+              id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               role: msg.role,
               content: msg.content,
               ...(msg.isTweet ? { isTweet: true } : {})
@@ -273,11 +184,15 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         });
 
         const result = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(result.error || 'Failed to save chat history');
         }
 
+        console.log('Chat history save result:', {
+          result,
+          savedMessageIds: result.messageIds
+        });
         
       } catch (error) {
         console.error('Failed to save chat history:', {
@@ -310,25 +225,25 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       }
       return t;
     };
-  
+
     let working = content;
     if (isStreaming) working = stripTrailingUnmatchedMarkers(working);
-  
+
     // Bold — use [\s\S] instead of dotAll
     working = working.replace(/\*\*([\s\S]+?)\*\*/g, (m, g1) => `<BOLD>${g1}</BOLD>`);
-  
+
     // Italic — avoid lookbehind by capturing prefix
     working = working.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, (m, prefix, inner) => {
       return `${prefix}<ITALIC>${inner}</ITALIC>`;
     });
-  
+
     // Links
     working = working.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, text, url) => {
       return `<LINK>${text}|${url}</LINK>`;
     });
-  
+
     const parts = working.split(/(<LINK>.*?<\/LINK>|<BOLD>.*?<\/BOLD>|<ITALIC>.*?<\/ITALIC>)/g);
-  
+
     return parts.map((part, index) => {
       if (part.startsWith('<BOLD>') && part.endsWith('</BOLD>')) {
         const boldText = part.slice(6, -7);
@@ -348,7 +263,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       return part;
     });
   };
-  
+
 
   // wrapper used by your code
   const formatContent = (content: string, isStreaming = false) => {
@@ -366,7 +281,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     setMessages(next);
     setInput('');
     setLoading(true);
-    
+
     // Reset textarea height after sending
     if (textareaRef.current) {
       textareaRef.current.style.height = '60px';
@@ -424,12 +339,12 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         // Read the streaming response
         while (true) {
           const { done, value } = await reader?.read() || {};
-          
+
           if (done) break;
-          
+
           const chunk = decoder.decode(value);
           fullResponse += chunk;
-          
+
           // Update the last message with the current response (raw)
           setMessages(prevMessages => {
             const updatedMessages = [...prevMessages];
@@ -478,24 +393,23 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   useEffect(() => {
     autoResizeTextarea();
   }, [autoResizeTextarea]);
-  
+
   // Auto-scroll when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading, isTyping, scrollToBottom]);
-  
+
   // Listen for tweet posted events
   useEffect(() => {
     // Handler for when a tweet is posted
     const handleTweetPosted = (tweetContent: string) => {
-      console.log('Tweet posted event received:', tweetContent);
       // Remove the tweet from messages
       handleDeleteTweet(tweetContent);
     };
-    
+
     // Subscribe to tweet posted events
     eventBus.on(EVENTS.TWEET_POSTED, handleTweetPosted);
-    
+
     // Cleanup: unsubscribe when component unmounts
     return () => {
       eventBus.off(EVENTS.TWEET_POSTED, handleTweetPosted);
@@ -516,7 +430,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     setIsTyping(true);
     setTypingMessage('');
     let index = 0;
-    
+
     const typeInterval = setInterval(() => {
       if (index < message.length) {
         setTypingMessage(prev => prev + message[index]);
@@ -619,41 +533,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     </div>
   );
 
-  // State for confirmation modal
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
-  // Confirmation Modal Component
-  const ConfirmModal = () => (
-    <div className="bg-background rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-lg p-4">
-      <div className="p-4 text-center">
-        <div className="mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 text-red-500 w-9 h-9">
-            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
-          </svg>
-          <h3 className="text-base font-semibold text-foreground mb-2">Clear All Chats</h3>
-          <p className="text-muted-foreground text-sm">Are you sure you want to clear all chats?</p>
-        </div>
-        <div className="flex justify-center space-x-3">
-          <button 
-            onClick={() => setIsConfirmModalOpen(false)}
-            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg text-foreground text-sm"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={() => {
-              handleClearAllChats();
-              setIsConfirmModalOpen(false);
-            }}
-            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="relative sm:h-[calc(100vh-6.5rem)] flex flex-col sm:overflow-hidden">
       {/* Only show the welcome message when there are no messages */}
@@ -664,46 +543,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       {/* Content Area (Messages and Tweet Cards) - Scrollable */} 
       {messages.length > 0 && (
         <div className="flex-1 w-11/12 p-2 sm:w-4/5 mx-auto overflow-auto pb-32 scrollbar-hide relative" style={{ height: 'calc(100vh - 14rem)' }}>
-          {/* Chat Options Menu */}
-          {messages.length > 0 && (
-            <div className="absolute top-0 -translate-y-1/8 right-0 z-50">
-              <div className="relative" id="chat-options-menu">
-                <button 
-                  onClick={toggleMenu}
-                  className="p-1.5 rounded-full hover:bg-muted transition-colors"
-                  aria-label="Chat Options"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-horizontal">
-                    <circle cx="12" cy="12" r="1"/>
-                    <circle cx="19" cy="12" r="1"/>
-                    <circle cx="5" cy="12" r="1"/>
-                  </svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                {isMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-30 bg-background border rounded-lg shadow-lg z-50 overflow-hidden">
-                    <button 
-                      onClick={() => {
-                        setIsConfirmModalOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full px-4 py-2 hover:bg-muted text-red-600 dark:text-red-400 flex justify-center items-center space-x-2"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        <line x1="10" x2="10" y1="11" y2="17" />
-                        <line x1="14" x2="14" y1="11" y2="17" />
-                      </svg>
-                      <span>delete</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           {/* Regular Messages Section */}
           <div className="space-y-3 mb-6">
             {messages.map((m, i) => {
@@ -885,12 +724,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {isConfirmModalOpen && (
-        <div className="absolute top-0 -translate-y-1/8 bottom-0 left-0 right-0 flex items-center justify-center z-50">
-          <ConfirmModal />
-        </div>
-      )}
     </div>
   );
 }
