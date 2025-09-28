@@ -426,23 +426,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     }
   };
 
-  const typeMessage = (message: string, callback: () => void) => {
-    setIsTyping(true);
-    setTypingMessage('');
-    let index = 0;
-
-    const typeInterval = setInterval(() => {
-      if (index < message.length) {
-        setTypingMessage(prev => prev + message[index]);
-        index++;
-      } else {
-        clearInterval(typeInterval);
-        setIsTyping(false);
-        setTypingMessage('');
-        callback();
-      }
-    }, 25); // Slightly faster for better UX
-  };
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
     <div className="bg-card border border-gray-300 dark:border-gray-800 rounded-xl p-4 w-full hover:shadow-sm transition-shadow relative">
