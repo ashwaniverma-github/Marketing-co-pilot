@@ -541,14 +541,11 @@ export default function DashboardClient() {
           {!selectedProduct ? (
             /* Empty State */
             <div className="max-w-2xl mx-auto text-center py-16">
-              <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center mx-auto mb-6">
-                <SparklesIcon className="w-10 h-10 text-foreground" />
-              </div>
               <h2 className="text-3xl font-semibold text-foreground mb-3">
-                Welcome to Marketing Co-Pilot
+                Welcome to Indiegrowth
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-                Start by adding your first product. We'll analyze it and create custom marketing content automatically.
+                Start by adding your first product. We'll analyze it and help you grow your app.
               </p>
               <button
                 onClick={() => setShowAddProductModal(true)}
