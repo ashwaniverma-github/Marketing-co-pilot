@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react';
 import { TwitterIcon } from './icons';
 import { CloseIcon } from './icons';
+import posthog from 'posthog-js';
 
 interface ConnectXModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export function ConnectXModal({ isOpen, onClose }: ConnectXModalProps) {
   if (!isOpen) return null;
 
   const handleConnectX = () => {
+    posthog.capture('cta_click', { cta: 'connect_x' });
     signIn('twitter', { callbackUrl: '/dashboard' });
   };
 

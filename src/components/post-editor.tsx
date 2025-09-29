@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { eventBus, EVENTS } from '@/lib/event-bus';
 import { RichTextEditor } from './ui/rich-text-editor';
 import { TweetCardEditor } from './ui/tweet-card-editor';
@@ -103,6 +104,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
   }, [post, isOpen]);
 
   const handleSave = () => {
+    posthog.capture('post_saved', { scheduled: !!scheduledAt });
     const updatedPost: Post = {
       id: post?.id || Date.now().toString(),
       content,
@@ -118,6 +120,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
   const handlePublish = async () => {
     // Check if user has X connection
     if (!hasXConnection) {
+      posthog.capture('connect_x_prompt_opened');
       onShowConnectX?.();
       return;
     }
@@ -149,6 +152,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       }
 
       const tweetId: string | undefined = result?.post?.data?.id;
+      posthog.capture('post_published', { platform, hasTweetId: !!tweetId });
 
       const updatedPost: Post = {
         id: post?.id || Date.now().toString(),

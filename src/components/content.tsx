@@ -1,6 +1,7 @@
 'use client';
 
 import { TwitterIcon } from './icons';
+import posthog from 'posthog-js';
 import { PostScheduler } from './post-scheduler';
 
 export default function Content({ 
@@ -72,6 +73,7 @@ export default function Content({
         </div>
         <button 
           onClick={() => {
+            posthog.capture('new_post_opened');
             setEditingPost(null);
             setShowPostEditor(true);
           }}

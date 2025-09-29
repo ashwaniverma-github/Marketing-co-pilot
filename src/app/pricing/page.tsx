@@ -141,6 +141,7 @@ export default function PricingPage() {
             </li>
           </ul>
           <button 
+            data-ph-name="Start Your Growth Journey"
             onClick={handleCheckout}
             className="block w-full text-center bg-foreground text-background py-4 rounded-lg hover:bg-foreground/90 text-lg font-semibold"
           >

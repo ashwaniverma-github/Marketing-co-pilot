@@ -6,6 +6,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { db } from "./db";
 import { Prisma } from "@prisma/client";
+import { captureServerEvent, identifyServerUser } from "./analytics";
 
 /* -------------------------------------------------------------
    Utilities & helpers
@@ -522,10 +523,34 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      try {
+        const uid = (session as any)?.user?.id || (token as any)?.userId;
+        if (uid) {
+          identifyServerUser(String(uid), {
+            email: session?.user?.email,
+            name: session?.user?.name,
+          });
+          captureServerEvent(String(uid), "session_active");
+        }
+      } catch (e) {
+        // best-effort only
+      }
       return session;
     },
 
     async signIn({ user, account, profile }) {
+      try {
+        if (user?.id) {
+          identifyServerUser(String(user.id), {
+            email: (user as any)?.email,
+            name: user.name,
+            provider: account?.provider,
+          });
+          captureServerEvent(String(user.id), "user_sign_in", {
+            provider: account?.provider,
+          });
+        }
+      } catch {}
       // Google: create or update social account
       if (account?.provider === "google" && profile && user?.id) {
         try {

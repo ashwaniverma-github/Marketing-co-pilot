@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import posthog from 'posthog-js';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react';
 
@@ -21,6 +22,7 @@ export default function LoginPage() {
   }, [status, router]);
 
   const handleTwitterLogin = async () => {
+    posthog.capture('cta_click', { cta: 'login_twitter' });
     setIsTwitterLoading(true);
     setError('');
 
@@ -38,6 +40,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    posthog.capture('cta_click', { cta: 'login_google' });
     setIsGoogleLoading(true);
     setError('');
 
@@ -80,6 +83,7 @@ export default function LoginPage() {
 
           {/* Google OAuth Login */}
           <Button
+            data-ph-name="Continue with Google"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading || isTwitterLoading}
             className="w-full cursor-pointer bg-white text-black border hover:bg-gray-50"

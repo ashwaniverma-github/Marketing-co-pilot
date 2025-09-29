@@ -35,6 +35,14 @@ const buttonVariants = cva(
   }
 )
 
+function getTextFromNode(node: React.ReactNode): string {
+  if (node == null) return ""
+  if (typeof node === "string" || typeof node === "number") return String(node)
+  if (Array.isArray(node)) return node.map(getTextFromNode).join("")
+  if (React.isValidElement(node)) return getTextFromNode((node as any).props?.children)
+  return ""
+}
+
 function Button({
   className,
   variant,
@@ -47,9 +55,16 @@ function Button({
   }) {
   const Comp = asChild ? Slot : "button"
 
+  const nameProp = (props as any)["data-ph-name"] as string | undefined
+  const ariaLabel = (props as any)["aria-label"] as string | undefined
+  const title = (props as any).title as string | undefined
+  const text = getTextFromNode((props as any).children).trim().slice(0, 200)
+  const computedName = nameProp || ariaLabel || title || (text ? text : undefined)
+
   return (
     <Comp
       data-slot="button"
+      {...(computedName ? { "data-ph-name": computedName } : {})}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

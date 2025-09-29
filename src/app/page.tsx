@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import posthog from 'posthog-js';
 import MuxPlayer from "@mux/mux-player-react"; 
 
 export default function Home() {
@@ -26,12 +27,12 @@ export default function Home() {
           <div className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-muted-foreground hover:text-foreground">Features</a>
             <a href="/about" className="text-muted-foreground hover:text-foreground">About</a>
-            <a href="/pricing" className="text-muted-foreground font-semibold hover:text-foreground">Pricing</a>
+            <a href="/pricing" onClick={() => posthog.capture('cta_click', { cta: 'nav_pricing' })} className="text-muted-foreground font-semibold hover:text-foreground">Pricing</a>
             
             <div className="ml-4">
               <ThemeToggle />
             </div>
-            <a href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
+            <a href="/login" onClick={() => posthog.capture('cta_click', { cta: 'nav_get_started' })} className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
               Get Started
             </a>
           </div>
