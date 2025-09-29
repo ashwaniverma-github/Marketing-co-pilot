@@ -665,8 +665,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
                   send();
                 }
               }}
-              placeholder={`Ask about ${productName}...`}
-              className="w-full pl-30 pt-4 sm:pl-40 sm:pr-20 sm:py-3 bg-background rounded-full focus:outline-none focus:ring-0 focus:border-4 transition-all resize-none"
+              placeholder={`Ask about ${productName}`}
+              className="w-full text-sm sm:text-base pl-26 pt-4 sm:pl-40 sm:pr-20 sm:py-3 bg-background rounded-full focus:outline-none focus:ring-0 focus:border-4 transition-all resize-none"
               style={{
                 outline: 'none',
                 boxShadow: 'none',
