@@ -34,6 +34,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
   const { data: session } = useSession();
+  const [deletingTweetContent, setDeletingTweetContent] = useState<string | null>(null);
 
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
@@ -85,6 +86,9 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       return;
     }
 
+    // Set the deleting state
+    setDeletingTweetContent(tweetContent);
+
     // Send delete request to backend
     const deleteTweet = async () => {
       try {
@@ -114,6 +118,9 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         setMessages(updatedMessages);
       } catch (error) {
         // Silently handle errors
+      } finally {
+        // Clear the deleting state
+        setDeletingTweetContent(null);
       }
     };
 
@@ -509,25 +516,32 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           <div className="flex items-center py-4 justify-between">
             <button
               onClick={() => handleDeleteTweet(content)}
-              className=" bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-full transition-colors text-red-600 dark:text-red-400"
+              disabled={deletingTweetContent === content}
+              className={`bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-full transition-colors text-red-600 dark:text-red-400 ${
+                deletingTweetContent === content ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               title="Delete tweet"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                <line x1="10" x2="10" y1="11" y2="17" />
-                <line x1="14" x2="14" y1="11" y2="17" />
-              </svg>
+              {deletingTweetContent === content ? (
+                <div className="animate-spin w-4 h-4 border-2 border-red-600 dark:border-red-400 border-t-transparent rounded-full"></div>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
+              )}
             </button>
 
             <button
-                  onClick={() => onOpenEditor?.(content, () => handleDeleteTweet(content))}
-                  className=" rounded-lg transition-colors flex items-center space-x-2 transform"
-                  title="Open in Editor"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span className="text-xs font-medium">Edit</span>
+              onClick={() => onOpenEditor?.(content, () => handleDeleteTweet(content))}
+              className=" rounded-lg transition-colors flex items-center space-x-2 transform"
+              title="Open in Editor"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Edit</span>
             </button>
           </div>
           
