@@ -544,7 +544,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               <span className="text-xs font-medium">Edit</span>
             </button>
           </div>
-          
+        
         </div>
       </div>
     </div>
@@ -592,10 +592,10 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             
             {loading && (
               <div className="text-left">
-                <div className="inline-block px-3 py-2 rounded-lg border bg-muted text-foreground">
+                <div className="inline-block px-3 py-2 rounded-lg text-foreground">
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"></div>
-                    <span>AI is thinking...</span>
+                    <span>Thinking...</span>
                   </div>
                 </div>
               </div>
