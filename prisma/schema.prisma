@@ -27,6 +27,22 @@ model User {
   subscription     Subscription?
   payments         Payment[]
 
+  // Gamification fields
+  xp                Int             @default(0)
+  level             Int             @default(1)
+  streak            Int             @default(0)
+  longestStreak     Int             @default(0)
+  lastCheckIn       DateTime?
+  weeklyCheckIns    Int             @default(0)
+  contentGenerated  Int             @default(0)
+  threadsCreated    Int             @default(0)
+  editingIterations Int             @default(0)
+  lastContentGeneratedAt DateTime?
+  gamificationEvents GamificationEvent[]
+
+  xPostsCount        Int      @default(0)
+  aiGeneratedTweets  Int      @default(0)
+
   @@map("users")
 }
 
@@ -302,6 +318,20 @@ model Message {
 
   @@index([chatHistoryId])
 }
+
+model GamificationEvent {
+  id        String                  @id @default(cuid())
+  userId    String
+  type      GamificationEventType
+  meta      Json?
+  xpEarned  Int?                   @default(0)
+  createdAt DateTime               @default(now())
+
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, createdAt])
+  @@map("gamification_events")
+}
                      
 
 
@@ -382,5 +412,17 @@ enum SyncStatus {
   SYNCING
   SUCCESS
   ERROR
+}
+
+enum GamificationEventType {
+  CHECK_IN
+  TWEET_GENERATED
+  THREAD_CREATED
+  DRAFT_SAVED
+  EDIT
+  LOGIN
+  CHALLENGE_COMPLETED
+  CALENDAR_USED
+  X_POST
 }
 

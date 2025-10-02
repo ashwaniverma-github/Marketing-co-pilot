@@ -1,7 +1,7 @@
 'use client';
 
 // Define tab types to match exactly what's in the dashboard-client
-type TabId = 'Content' | 'Chat' | 'Knowledge base';
+type TabId = 'Content' | 'Chat' | 'Knowledge base' | 'Progress';
 
 type TabItem = {
   id: TabId;

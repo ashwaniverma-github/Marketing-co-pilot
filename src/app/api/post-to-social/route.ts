@@ -153,11 +153,34 @@ export async function POST(request: NextRequest) {
               }, { status: 502 });
             }
 
+            // Update user's xPostsCount and XP after successful post
+            await db.user.update({
+              where: { id: session.user.id },
+              data: {
+                xPostsCount: { increment: 1 },
+                xp: { increment: 10 }, // 10 XP for posting to X
+                lastContentGeneratedAt: new Date()
+              }
+            });
+
+            // Log gamification event
+            if (session.user.id) {
+              await db.gamificationEvent.create({
+                data: {
+                  userId: session.user.id,
+                  type: 'X_POST',
+                  xpEarned: 10,
+                  meta: { platformPostId: data.id }
+                }
+              });
+            }
+
             return NextResponse.json({
               success: true,
               message: 'Posted to X successfully',
               post: data,
-              platform: 'twitter'
+              platform: 'twitter',
+              xpEarned: 10
             });
           } catch (error) {
             console.error('Posting to Twitter failed:', error);

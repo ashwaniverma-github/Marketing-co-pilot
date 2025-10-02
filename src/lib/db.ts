@@ -199,3 +199,94 @@ export const socialHelpers = {
 };
 
 export default db;
+
+// Gamification helpers
+export const gamificationHelpers = {
+  async recordEvent(userId: string, type: import('@prisma/client').GamificationEventType, meta?: Record<string, unknown>) {
+    await db.gamificationEvent.create({
+      data: { userId, type, meta: meta as any },
+    });
+  },
+
+  async awardXp(userId: string, xpToAdd: number) {
+    // Simple level formula: level up every 500 XP
+    const user = await db.user.update({
+      where: { id: userId },
+      data: {
+        xp: { increment: xpToAdd },
+      },
+      select: { id: true, xp: true, level: true },
+    });
+
+    const targetLevel = Math.max(1, Math.floor(user.xp / 500) + 1);
+    if (targetLevel !== user.level) {
+      await db.user.update({ where: { id: userId }, data: { level: targetLevel } });
+    }
+  },
+
+  async checkIn(userId: string) {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { lastCheckIn: true, streak: true, longestStreak: true, weeklyCheckIns: true } });
+
+    const last = user?.lastCheckIn ? new Date(user.lastCheckIn) : undefined;
+    let newStreak = (user?.streak ?? 0);
+
+    if (!last) {
+      newStreak = 1;
+    } else {
+      const startOfLast = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+      const diffDays = Math.floor((startOfToday.getTime() - startOfLast.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) {
+        // already checked in today
+        return { alreadyCheckedIn: true } as const;
+      } else if (diffDays === 1) {
+        newStreak = (user?.streak ?? 0) + 1;
+      } else {
+        newStreak = 1;
+      }
+    }
+
+    const newLongest = Math.max(user?.longestStreak ?? 0, newStreak);
+
+    // Weekly check-ins: reset if week changed
+    const now = new Date();
+    const currentWeek = getWeekKey(now);
+    const lastWeek = last ? getWeekKey(last) : undefined;
+    const weeklyCheckIns = lastWeek && lastWeek === currentWeek ? (user?.weeklyCheckIns ?? 0) + 1 : 1;
+
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        lastCheckIn: startOfToday,
+        streak: newStreak,
+        longestStreak: newLongest,
+        weeklyCheckIns,
+      },
+    });
+
+    await db.gamificationEvent.create({ data: { userId, type: 'CHECK_IN' } as any });
+    await gamificationHelpers.awardXp(userId, 5);
+
+    return { alreadyCheckedIn: false, streak: newStreak, weeklyCheckIns } as const;
+  },
+
+  async incrementContentCounters(userId: string, options: { isThread?: boolean; isDraft?: boolean; edited?: boolean }) {
+    const updates: any = { contentGenerated: { increment: 1 }, lastContentGeneratedAt: new Date() };
+    if (options?.isThread) updates.threadsCreated = { increment: 1 };
+    if (options?.isDraft) updates.draftsSaved = { increment: 1 };
+    if (options?.edited) updates.editingIterations = { increment: 1 };
+
+    await db.user.update({ where: { id: userId }, data: updates });
+  },
+};
+
+function getWeekKey(d: Date) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date as any) - (yearStart as any)) / 86400000 + 1) / 7);
+  return `${date.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
+}

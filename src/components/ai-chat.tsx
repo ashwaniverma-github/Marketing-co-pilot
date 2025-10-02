@@ -315,6 +315,26 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             isTweet: true,
             id: generateStableMessageId(tweet, 'assistant', true)
           }));
+          
+          // Increment aiGeneratedTweets
+          try {
+            const incrementResponse = await fetch('/api/gamification/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                incrementFields: {
+                  aiGeneratedTweets: tweets.length
+                }
+              })
+            });
+
+            if (!incrementResponse.ok) {
+              console.warn('Failed to increment AI generated tweets count');
+            }
+          } catch (incrementError) {
+            console.error('Error incrementing AI generated tweets:', incrementError);
+          }
+
           setMessages([...next, ...tweetMessages]);
         }
       } else {

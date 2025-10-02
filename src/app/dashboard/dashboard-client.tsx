@@ -4,21 +4,20 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import { PostEditor } from '@/components/post-editor';
-import { PostScheduler } from '@/components/post-scheduler';
 import { AiChat } from '@/components/ai-chat';
 import { ConnectXModal } from '@/components/connect-x-modal';
 import { DeleteConfirmationModal } from '@/components/delete-confirmation-modal';
 import { Navbar } from '@/components/dashboard/Navbar';
 import { Topbar } from '@/components/dashboard/Topbar';
 import {
-  ContentIcon,
   PlusIcon,
   SparklesIcon,
-  TwitterIcon,
   CloseIcon
 } from '@/components/icons';
+import { FileText, MessageCircle, BookOpen, TrendingUp } from 'lucide-react';
 import KnowledgeBase from '@/components/KnowledgeBase';
 import Content from '@/components/content';
+import GamificationDashboard from '@/components/gamification-dashboard';
 
 interface Product {
   id: string;
@@ -236,7 +235,7 @@ export default function DashboardClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   // Define tab type to match components
-  type TabId = 'Content' | 'Chat' | 'Knowledge base';
+  type TabId = 'Content' | 'Chat' | 'Knowledge base' | 'Progress';
   const [activeTab, setActiveTab] = useState<TabId>('Content');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -252,7 +251,7 @@ export default function DashboardClient() {
   
   // Loading states
   const [isLoadingApps, setIsLoadingApps] = useState(false);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  // Removed isLoadingPosts as it was unused
 
   // Authentication check
   useEffect(() => {
@@ -290,7 +289,6 @@ export default function DashboardClient() {
   };
 
   const loadPosts = async () => {
-    setIsLoadingPosts(true);
     try {
       const response = await fetch('/api/posts?limit=100');
       const result = await response.json();
@@ -305,8 +303,6 @@ export default function DashboardClient() {
       }
     } catch (error) {
       console.error('Failed to load posts:', error);
-    } finally {
-      setIsLoadingPosts(false);
     }
   };
 
@@ -469,7 +465,7 @@ export default function DashboardClient() {
     }
   };
 
-  const handleToggleSchedule = async (postId: string) => {
+  const handleToggleSchedule = async () => {
     try {
       // In a real implementation, you'd have an UPDATE endpoint
       // For now, we'll just reload the posts
@@ -482,20 +478,16 @@ export default function DashboardClient() {
 
 
 
-  const tabs = [
-    { id: 'Content' as const, name: 'Content'},
-    { id: 'Chat' as const, name: 'Chat'},
-    { id: 'Knowledge base' as const, name: 'Knowledge base'},
+  const tabs: Array<{
+    id: TabId;
+    name: string;
+    icon: React.ReactNode;
+  }> = [
+    { id: 'Content' as const, name: 'Content', icon: <FileText className="w-5 h-5" /> },
+    { id: 'Chat' as const, name: 'Chat', icon: <MessageCircle className="w-5 h-5" /> },
+    { id: 'Knowledge base' as const, name: 'Knowledge base', icon: <BookOpen className="w-5 h-5" /> },
+    { id: 'Progress' as const, name: 'Progress', icon: <TrendingUp className="w-5 h-5" />},
   ];
-
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'twitter':
-        return TwitterIcon;
-      default:
-        return TwitterIcon;
-    }
-  };
 
   // Show loading state while authenticating
   if (authLoading) {
@@ -608,6 +600,10 @@ export default function DashboardClient() {
                   setEditingPost={setEditingPost}
                   setShowConnectXModal={setShowConnectXModal}
                 />
+              )}
+
+              {activeTab === 'Progress' && (
+                <GamificationDashboard />
               )}
 
               
