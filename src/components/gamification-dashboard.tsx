@@ -345,11 +345,13 @@ export default function GamificationDashboard() {
       <MotionCard >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Level Progress
+            Level Progress <p className="text-sm px-10 text-gray-500">On Every Post You Get 10 XP</p>
           </CardTitle>
+          
           <CardDescription>
             {profile.xp.toLocaleString()} XP • {levelName} (Level {profile.level})
           </CardDescription>
+          
         </CardHeader>
         <CardContent>
           <Progress value={getLevelProgress()} className="h-3" />
