@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import Image from 'next/image';
@@ -112,6 +112,7 @@ export default function Home() {
               {session ? "Go to app" : "Get Started"}
             </a>
           </div>
+          <h1 className='text-sm text-muted-foreground pt-2'>Start Free . No Credit Card Required</h1>
         </div>
       </section>
 
