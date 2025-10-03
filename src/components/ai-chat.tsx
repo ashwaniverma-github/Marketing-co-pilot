@@ -28,8 +28,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const [loading, setLoading] = useState(false);
   const [tweetMode, setTweetMode] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [typingMessage, setTypingMessage] = useState<string>('');
-  const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
@@ -359,10 +357,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         const updatedMessages = [...next, assistantMessage];
         setMessages(updatedMessages);
 
-        // Start typing effect
-        setIsTyping(true);
-        setTypingMessage('');
-
         // Read the streaming response
         while (true) {
           const { done, value } = await reader?.read() || {};
@@ -384,7 +378,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           });
 
           // Update typing message for typing effect (this will be rendered with streaming formatting)
-          setTypingMessage(fullResponse);
+          // setTypingMessage(fullResponse); // This line is removed
         }
 
         // Finalize the message
@@ -402,8 +396,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         });
 
         // Finalize typing effect
-        setIsTyping(false);
-        setTypingMessage('');
+        // setIsTyping(false); // This line is removed
+        // setTypingMessage(''); // This line is removed
       }
     } catch (e) {
       const errorMessage: ChatMessage = { 
@@ -424,7 +418,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   // Auto-scroll when messages change
   useEffect(() => {
     scrollToBottom();
-  }, [messages, loading, isTyping, scrollToBottom]);
+  }, [messages, loading, scrollToBottom]);
 
   // Listen for tweet posted events
   useEffect(() => {
@@ -566,24 +560,14 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               // Skip tweet messages as they're displayed separately
               if (m.isTweet) return null;
               
-              // Check if this is the most recent AI response and should show typing effect
-              const isLatestAIResponse = m.role === 'assistant' && i === messages.length - 1 && !m.isTweet;
-              const shouldShowTyping = isLatestAIResponse && isTyping;
-              
               return (
                 <div key={i} className={`${m.role === 'user' ? 'text-right' : 'text-left'} relative`}>
                   <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'} relative`}>
                     <div className="whitespace-pre-wrap break-words">
                       {m.role === 'user' ? m.content : (
-                        shouldShowTyping ? (
-                          <span>
-                            {formatContent(typingMessage, true)}
-                            <span className="animate-pulse">|</span>
-                          </span>
-                        ) : (
                           formatContent(m.content)
                         )
-                      )}
+                      }
                     </div>
                   </div>
                 </div>
@@ -602,20 +586,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             )}
             
             {/* Typing indicator for normal AI responses */}
-            {isTyping && !loading && (
-              <div className="text-left">
-                <div className="inline-block px-3 py-3 rounded-2xl border bg-muted text-foreground max-w-[80%]">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    <span className="text-sm text-muted-foreground">AI is typing...</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* This section is removed as typing effect is removed */}
           </div>
 
           {/* Tweet Cards Section - Now above the input area */}
