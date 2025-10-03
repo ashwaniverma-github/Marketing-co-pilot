@@ -24,6 +24,25 @@ type ChatMessage = {
   id?: string; 
 };
 
+// New function to generate tweet suggestions
+const generateTweetSuggestions = (productName: string, productUrl: string): string[] => {
+  const suggestions = [
+    // Generic product awareness tweets
+    `Create some detailed tweets about ${productName} - on the given context and details. write in a natural way to attract audience to my app `,
+    `Write how can ${productName} help to solve the problem of the user use bullet points `,
+    
+    // Engagement and value proposition tweets
+    `Write some tweets about the benefits of ${productName} use the app url for promoting the app`,
+    `write some tweets in a funny way that can attract users to my app , prioritize the users time and deliver the best words to attract the user`,
+    
+    // Social proof and personal experience
+    `write some tweets about the user experience of using ${productName}`,
+    
+  ];
+
+  return suggestions;
+};
+
 export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -344,7 +363,9 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           productName, 
           productUrl, 
           messages: next,
-          tweetMode 
+          tweetMode,
+          // Add a parameter to specify number of tweets if needed
+          tweetCount: tweetMode ? 2 : undefined // Default to 1 tweet
         }),
       });
 
@@ -355,9 +376,17 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       // For tweet mode, we'll still use the existing approach
       if (tweetMode) {
         const data = await res.text();
+        let tweets: string[] = [];
+
+        // Handle different tweet response formats
         if (data.includes('---TWEET---')) {
-          // Split multiple tweets and create separate messages
-          const tweets = data.split('---TWEET---').map((tweet: string) => tweet.trim()).filter(Boolean);
+          tweets = data.split('---TWEET---').map((tweet: string) => tweet.trim()).filter(Boolean);
+        } else if (data.trim()) {
+          // If no separator, treat the entire response as a tweet
+          tweets = [data.trim()];
+        }
+
+        if (tweets.length > 0) {
           const tweetMessages: ChatMessage[] = tweets.map((tweet: string) => ({
             role: 'assistant',
             content: tweet,
@@ -420,9 +449,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             };
             return updatedMessages;
           });
-
-          // Update typing message for typing effect (this will be rendered with streaming formatting)
-          // setTypingMessage(fullResponse); // This line is removed
         }
 
         // Finalize the message
@@ -438,10 +464,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           finalMessages[finalMessages.length - 1] = finalMessage;
           return finalMessages;
         });
-
-        // Finalize typing effect
-        // setIsTyping(false); // This line is removed
-        // setTypingMessage(''); // This line is removed
       }
     } catch (e) {
       const errorMessage: ChatMessage = { 
@@ -490,6 +512,26 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
       console.error('Failed to copy text: ', err);
     }
   };
+
+  // Function to get a random tweet suggestion
+  const getRandomTweetSuggestion = useCallback(() => {
+    const suggestions = generateTweetSuggestions(productName, productUrl);
+    return suggestions[Math.floor(Math.random() * suggestions.length)];
+  }, [productName, productUrl]);
+
+  // Toggle tweet mode with automatic suggestion
+  const toggleTweetMode = useCallback(() => {
+    const newTweetModeState = !tweetMode;
+    setTweetMode(newTweetModeState);
+
+    // If enabling tweet mode, set a random tweet suggestion
+    if (newTweetModeState) {
+      setInput(getRandomTweetSuggestion());
+    } else {
+      // Clear input when disabling tweet mode
+      setInput('');
+    }
+  }, [tweetMode, getRandomTweetSuggestion]);
 
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
@@ -548,7 +590,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               </button>
             </div>
           </div>
-          <div className="text-foreground whitespace-pre-wrap break-words leading-relaxed">{formatContent(content)}</div>
+          <div className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words leading-relaxed">{formatContent(content)}</div>
           
           {/* Delete button in bottom right corner */}
           <div className="flex items-center py-4 justify-between">
@@ -693,7 +735,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             {/* Tweet mode pill placed inside the input area on the left */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20">
               <button
-                onClick={() => setTweetMode((s) => !s)}
+                onClick={toggleTweetMode}
                 aria-pressed={tweetMode}
                 className={`flex items-center space-x-2 px-3 py-1 rounded-xl border transition-all text-sm select-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-600 ${
                   tweetMode

@@ -42,9 +42,7 @@ export function TweetCardEditor({
       Placeholder.configure({
         placeholder,
       }),
-      CharacterCount.configure({
-        limit: maxLength,
-      }),
+      // Remove the character limit configuration
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -55,7 +53,8 @@ export function TweetCardEditor({
     content,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      setCharCount(editor.storage.characterCount.characters());
+      // Use a simple character count method
+      setCharCount(html.replace(/<[^>]*>/g, '').length);
       onChange(html);
     },
   });
@@ -66,6 +65,9 @@ export function TweetCardEditor({
       editor.commands.setContent(content);
     }
   }, [content, editor]);
+
+  // Check if user is X Premium
+  const isXPremium = (session as any)?.xVerified;
 
   return (
     <div className="bg-card border border-gray-300 rounded-xl w-full hover:shadow-sm transition-shadow">
@@ -125,16 +127,26 @@ export function TweetCardEditor({
             />
           </div>
           
-          {/* Character Counter */}
-          <div className="mt-3 flex justify-end">
+          {/* Character Counter and X Premium Warning */}
+          <div className="mt-3 flex justify-between items-center">
+            <div>
+              {!isXPremium && charCount > 280 && (
+                <div className="text-xs text-amber-500 flex items-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>Tweets over 280 characters require X Premium</span>
+                </div>
+              )}
+            </div>
             <div className={`text-xs font-medium ${
-              charCount > maxLength * 0.8 
-                ? charCount > maxLength 
-                  ? 'text-red-500' 
-                  : 'text-amber-500' 
+              charCount > 280 
+                ? !isXPremium 
+                  ? 'text-amber-500' 
+                  : 'text-muted-foreground'
                 : 'text-muted-foreground'
             }`}>
-              {charCount}/{maxLength}
+              {charCount} characters
             </div>
           </div>
         </div>
