@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import posthog from 'posthog-js';
 import { eventBus, EVENTS } from '@/lib/event-bus';
 import { RichTextEditor } from './ui/rich-text-editor';
-import { TweetCardEditor } from './ui/tweet-card-editor';
+import { TweetCardEditor, convertHtmlToTweetText } from './ui/tweet-card-editor';
 import { Button } from './ui/button';
 import {
   Calendar,
@@ -141,6 +141,11 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     setIsPublishing(true);
     
     try {
+      // Convert HTML content to plain text with line breaks preserved
+      const tweetContent = platform === 'twitter' 
+        ? convertHtmlToTweetText(content)
+        : content;
+
       // Post to social media
       const response = await fetch('/api/post-to-social', {
         method: 'POST',
@@ -149,7 +154,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
         },
         body: JSON.stringify({
           platform,
-          content,
+          content: tweetContent,
         }),
       });
 
@@ -178,7 +183,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       
       onPublish?.(updatedPost);
       
-      // Emit event that a tweet was posted (with the content for identification)
+      // Emit event that a tweet was posted (with the original content for identification)
       eventBus.emit(EVENTS.TWEET_POSTED, content);
       
       // Show success toast
@@ -207,6 +212,11 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     if (!scheduledAt) return;
     
     try {
+      // Convert HTML content to plain text for Twitter
+      const tweetContent = platform === 'twitter' 
+        ? convertHtmlToTweetText(content)
+        : content;
+
       // Schedule the post
       const response = await fetch('/api/post-to-social', {
         method: 'POST',
@@ -215,7 +225,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
         },
         body: JSON.stringify({
           platform,
-          content,
+          content: tweetContent,
           scheduledAt: scheduledAt.toISOString(),
         }),
       });
@@ -429,48 +439,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                 </Button>
               </div>
             </div>
-
-            {/* Scheduling */}
-            {/* <div>
-              <label className="block text-sm font-medium text-foreground mb-3">Schedule</label>
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant={scheduledAt ? "outline" : "default"}
-                  onClick={() => setScheduledAt(null)}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Post Now
-                </Button>
-                <Button
-                  variant={scheduledAt ? "default" : "outline"}
-                  onClick={() => setScheduledAt(new Date())}
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule
-                </Button>
-              </div>
-              
-              {scheduledAt && (
-                <div className="mt-4 p-4 bg-muted rounded-xl">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Schedule for:</span>
-                    </div>
-                    <DatePicker
-                      selected={scheduledAt}
-                      onChange={(date) => setScheduledAt(date)}
-                      showTimeSelect
-                      timeFormat="HH:mm"
-                      timeIntervals={15}
-                      dateFormat="MMM d, yyyy h:mm aa"
-                      minDate={new Date()}
-                      className="px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              )}
-            </div> */}
           </div>
 
           {/* Actions */}

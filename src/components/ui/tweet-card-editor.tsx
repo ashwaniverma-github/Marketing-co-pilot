@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import CharacterCount from '@tiptap/extension-character-count';
 import Link from '@tiptap/extension-link';
 import { useSession } from 'next-auth/react';
 
@@ -14,6 +13,60 @@ interface TweetCardEditorProps {
   placeholder?: string;
   maxLength?: number;
   className?: string;
+}
+
+// Helper function to convert markdown to HTML
+function markdownToHtml(markdown: string): string {
+  if (!markdown) return '';
+  
+  let html = markdown;
+  
+  // Convert **bold** to <strong>
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert *italic* to <em>
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  
+  // Convert __underline__ to <u>
+  html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+  
+  // Convert [link text](url) to <a>
+  html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+  
+  // Wrap in paragraph if not already HTML
+  if (!html.startsWith('<')) {
+    html = `<p>${html}</p>`;
+  }
+  
+  return html;
+}
+
+// Helper function to convert HTML to plain text with line breaks preserved
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  
+  let text = html;
+  
+  // Replace </p><p> with double line break
+  text = text.replace(/<\/p>\s*<p>/gi, '\n\n');
+  
+  // Replace <br> with line break
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Remove all other HTML tags
+  text = text.replace(/<[^>]*>/g, '');
+  
+  // Decode HTML entities
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  text = textarea.value;
+  
+  return text.trim();
+}
+
+// Export this function so you can use it when posting to X
+export function convertHtmlToTweetText(html: string): string {
+  return htmlToPlainText(html);
 }
 
 export function TweetCardEditor({ 
@@ -42,7 +95,6 @@ export function TweetCardEditor({
       Placeholder.configure({
         placeholder,
       }),
-      // Remove the character limit configuration
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -50,19 +102,26 @@ export function TweetCardEditor({
         },
       }),
     ],
-    content,
+    content: '',
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      // Use a simple character count method
-      setCharCount(html.replace(/<[^>]*>/g, '').length);
+      const plainText = htmlToPlainText(html);
+      setCharCount(plainText.length);
       onChange(html);
     },
   });
 
   // Update editor content when content prop changes
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && content) {
+      // Check if content is markdown or HTML
+      const isHtml = content.trim().startsWith('<');
+      const htmlContent = isHtml ? content : markdownToHtml(content);
+      
+      if (htmlContent !== editor.getHTML()) {
+        editor.commands.setContent(htmlContent);
+        setCharCount(htmlToPlainText(htmlContent).length);
+      }
     }
   }, [content, editor]);
 
@@ -123,7 +182,7 @@ export function TweetCardEditor({
           <div className="text-foreground min-h-[100px]">
             <EditorContent 
               editor={editor} 
-              className={`prose prose-sm max-w-none focus:outline-none [&_.ProseMirror]:focus:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror-focused]:border-none [&_.ProseMirror-focused]:ring-0 [&_.ProseMirror]:focus:ring-0 [&_.ProseMirror]:p-0 ${className}`}
+              className={`prose prose-sm max-w-none focus:outline-none [&_.ProseMirror]:focus:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror-focused]:border-none [&_.ProseMirror-focused]:ring-0 [&_.ProseMirror]:focus:ring-0 [&_.ProseMirror]:p-0 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline ${className}`}
             />
           </div>
           
