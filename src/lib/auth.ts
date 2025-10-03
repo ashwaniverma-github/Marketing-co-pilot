@@ -526,6 +526,17 @@ export const authOptions: NextAuthOptions = {
       try {
         const uid = (session as any)?.user?.id || (token as any)?.userId;
         if (uid) {
+          // Check for active subscription
+          const userWithSubscription = await db.user.findUnique({
+            where: { id: uid },
+            include: { subscription: true }
+          });
+
+          const hasActiveSubscription = !!userWithSubscription?.subscription && 
+            userWithSubscription.subscription.status === 'ACTIVE';
+
+          (session as any).hasActiveSubscription = hasActiveSubscription;
+
           identifyServerUser(String(uid), {
             email: session?.user?.email,
             name: session?.user?.name,
@@ -534,6 +545,7 @@ export const authOptions: NextAuthOptions = {
         }
       } catch (e) {
         // best-effort only
+        console.error('Error checking subscription status:', e);
       }
       return session;
     },

@@ -8,11 +8,13 @@ import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import posthog from 'posthog-js';
 import MuxPlayer from "@mux/mux-player-react"; 
+import { useSession } from 'next-auth/react';
 
 export default function Home() {
   const { resolvedTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,8 +34,12 @@ export default function Home() {
             <div className="ml-4">
               <ThemeToggle />
             </div>
-            <a href="/login" onClick={() => posthog.capture('cta_click', { cta: 'nav_get_started' })} className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
-              Get Started
+            <a 
+              href={session ? "/dashboard" : "/login"} 
+              onClick={() => posthog.capture('cta_click', { cta: 'nav_get_started' })} 
+              className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold"
+            >
+              {session ? "Dashboard" : "Get Started"}
             </a>
           </div>
 
@@ -55,8 +61,8 @@ export default function Home() {
               <a href="#features" className="text-foreground">Features</a>
               <a href="/about" className="text-foreground">About</a>
               <a href="/pricing" className="text-foreground">Pricing</a>
-              <a href="/login" className="bg-foreground text-background px-6 py-2 rounded-full">
-                Get Started
+              <a href={session ? "/dashboard" : "/login"} className="bg-foreground text-background px-6 py-2 rounded-full">
+                {session ? "Dashboard" : "Get Started"}
               </a>
               <div>
                 <ThemeToggle />
@@ -102,8 +108,8 @@ export default function Home() {
             Our AI understands your app and your audience, and helps you grow your app.
           </p>
           <div className="flex justify-center space-x-4">
-            <a href="/login" className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
-              Get Started
+            <a href={session ? "/dashboard" : "/login"} className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
+              {session ? "Go to app" : "Get Started"}
             </a>
           </div>
         </div>
@@ -149,8 +155,8 @@ export default function Home() {
           {/* <p className="text-base sm:text-xl text-muted-foreground mb-8">
             Join thousands of indie hackers who are growing their app with our AI.
           </p> */}
-          <a href="/login" className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
-            Get Started<span className="ml-1">→</span>
+          <a href={session ? "/dashboard" : "/login"} className="inline-block bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 rounded-lg hover:bg-foreground/90 font-semibold text-base sm:text-lg">
+            {session ? "Dashboard" : "Get Started"}<span className="ml-1">→</span>
           </a>
           {/* <p className="text-muted-foreground mt-4 text-sm sm:text-base">
             Just Signin and Start Growing Your App

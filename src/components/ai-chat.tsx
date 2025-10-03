@@ -6,6 +6,8 @@ import { Forward, Edit } from 'lucide-react';
 import { eventBus, EVENTS } from '@/lib/event-bus';
 import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
+import Link from 'next/link';
+import { SubscriptionModal as SubscriptionModalComponent } from './subscription-modal';
 
 interface AiChatProps {
   productId: string;
@@ -33,6 +35,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const isInitialLoad = useRef(true);
   const { data: session } = useSession();
   const [deletingTweetContent, setDeletingTweetContent] = useState<string | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [freeUsageCount, setFreeUsageCount] = useState(0);
 
   // Function to generate a stable message ID
   const generateStableMessageId = (content: string, role: ChatRole, isTweet?: boolean) => {
@@ -275,7 +279,47 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     return formatStreamingContent(content, isStreaming);
   };
 
+  // Check free usage before sending message
+  const checkFreeUsage = async () => {
+    // First, check if user has an active subscription
+    const hasActiveSubscription = (session as any)?.hasActiveSubscription;
+    
+    // If user has an active subscription, always allow usage
+    if (hasActiveSubscription) {
+      return true;
+    }
+
+    try {
+      const response = await fetch('/api/free-usage');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to check usage');
+      }
+
+      const usageCount = result.usageCount;
+      const isLimitReached = result.isLimitReached;
+
+      setFreeUsageCount(usageCount);
+
+      if (isLimitReached) {
+        setShowSubscriptionModal(true);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to check free usage:', error);
+      return true; // Default to allowing usage if check fails
+    }
+  };
+
+  // Modify send method to check free usage first
   const send = async () => {
+    // Check free usage before sending
+    const canProceed = await checkFreeUsage();
+    if (!canProceed) return;
+
     if (!input.trim()) return;
     const userMessage: ChatMessage = { 
       role: 'user', 
@@ -544,6 +588,9 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     </div>
   );
 
+  // Subscription Modal Component
+
+
   return (
     <div className="relative sm:h-[calc(100vh-6.5rem)] flex flex-col sm:overflow-hidden">
       {/* Only show the welcome message when there are no messages */}
@@ -711,6 +758,14 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         </div>
       )}
 
+      {/* Subscription Modal */}
+      {showSubscriptionModal && (
+        <SubscriptionModalComponent 
+          isOpen={true} 
+          onClose={() => setShowSubscriptionModal(false)} 
+          freeUsageCount={freeUsageCount}
+        />
+      )}
     </div>
   );
 }

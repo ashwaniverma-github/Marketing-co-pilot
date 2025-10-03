@@ -2,6 +2,7 @@
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 
 type Product = {
@@ -15,8 +16,10 @@ type Product = {
 export default function PricingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   async function handleCheckout() {
+    setIsCheckingOut(true);
     if (status !== "authenticated") {
       router.push("/login");
       return;
@@ -69,6 +72,8 @@ export default function PricingPage() {
     } catch (error) {
       console.error("Checkout error:", error);
       alert("Checkout failed. See console for details.");
+    } finally {
+      setIsCheckingOut(false);
     }
   }
   
@@ -109,43 +114,48 @@ export default function PricingPage() {
             <span className="text-muted-foreground ml-2">/ month</span>
           </div>
           <ul className="mb-8 space-y-4 text-left">
-            <li className="flex items-center">
-              <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Tweet mode to generate tweets for your app
-            </li>
-            <li className="flex items-center">
-              <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Post to X in one click 
-            </li>
-            <li className="flex items-center">
-              <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Ask the AI anything about your app 
-            </li>
-            <li className="flex items-center">
-              <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Rich text editor
-            </li>
-            <li className="flex items-center">
-              <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Knowledge base 
-            </li>
-          </ul>
+              <li className="flex items-center">
+                <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Unlimited AI chat sessions
+              </li>
+              <li className="flex items-center">
+                <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Tweet mode
+              </li>
+              <li className="flex items-center">
+                <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Rich text editor
+              </li>
+              <li className="flex items-center">
+                <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Knowledge base
+              </li>
+              <li className="flex items-center">
+                <svg className="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Post to X in one click
+              </li>
+            </ul>
           <button 
             data-ph-name="Start Your Growth Journey"
             onClick={handleCheckout}
-            className="block w-full text-center bg-foreground text-background py-4 rounded-lg hover:bg-foreground/90 text-lg font-semibold"
+            disabled={isCheckingOut}
+            className="w-full text-center bg-foreground text-background py-4 rounded-lg hover:bg-foreground/90 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
-            {status === "authenticated" ? "Start Your Growth Journey" : "Signin to buy"}
+            {isCheckingOut ? (
+              <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              <span>{status === "authenticated" ? "Start Your Growth Journey" : "Signin to buy"}</span>
+            )}
           </button>
         </div>
       </section>

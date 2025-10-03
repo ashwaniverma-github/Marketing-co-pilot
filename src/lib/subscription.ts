@@ -2,6 +2,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Throws a redirect (to login or pricing) if the current request's session
@@ -48,4 +50,33 @@ export async function ensureActiveSubscription(redirectToLogin = true) {
 
   // success
   return { ok: true, user, subscription: sub };
+}
+
+/**
+ * Track and limit free usage for users without an active subscription
+ */
+export async function trackFreeUsage(request: NextRequest) {
+  const freeUsageCookie = request.cookies.get('free_usage')?.value;
+  
+  let freeUsage = freeUsageCookie 
+    ? parseInt(freeUsageCookie, 10) 
+    : 0;
+
+  // Increment usage
+  freeUsage += 1;
+
+  // Prepare response with updated cookie
+  const response = NextResponse.json({
+    usageCount: freeUsage,
+    isLimitReached: freeUsage > 3 // Allow 3 free uses
+  });
+
+  // Set cookie with max age of 30 days
+  response.cookies.set('free_usage', freeUsage.toString(), {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    httpOnly: true,
+    sameSite: 'strict'
+  });
+
+  return response;
 }

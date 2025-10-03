@@ -28,6 +28,8 @@ import {
 } from './ui/dropdown-menu';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { SubscriptionModal } from './subscription-modal';
+import { useSession } from 'next-auth/react';
 
 interface Post {
   id: string;
@@ -51,6 +53,8 @@ interface PostEditorProps {
 }
 
 export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConnection, onShowConnectX }: PostEditorProps) {
+  const { data: session } = useSession();
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [content, setContent] = useState(post?.content || '');
   const [platform, setPlatform] = useState<'twitter'>(post?.platform || 'twitter');
   const [hashtags, setHashtags] = useState<string[]>(post?.hashtags || []);
@@ -118,6 +122,15 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
   };
 
   const handlePublish = async () => {
+    // First, check if user has an active subscription
+    const hasActiveSubscription = (session as any)?.hasActiveSubscription;
+    
+    // If no active subscription, show subscription modal
+    if (!hasActiveSubscription) {
+      setShowSubscriptionModal(true);
+      return;
+    }
+
     // Check if user has X connection
     if (!hasXConnection) {
       posthog.capture('connect_x_prompt_opened');
@@ -299,231 +312,239 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-card border rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex justify-between items-start">
+    <>
+      <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-card border rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground">
+                  {post ? 'Edit Post' : 'Create New Post'}
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  Create engaging content for your social media platforms
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Platform Selection */}
             <div>
-              <h2 className="text-2xl font-semibold text-foreground">
-                {post ? 'Edit Post' : 'Create New Post'}
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                Create engaging content for your social media platforms
-              </p>
+              <label className="block text-sm font-medium text-foreground mb-3">Platform</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className={getPlatformColor(platform)}>
+                        {getPlatformIcon(platform)}
+                      </span>
+                      <span>{getPlatformName(platform)}</span>
+                    </div>
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full">
+                  <DropdownMenuItem onClick={() => setPlatform('twitter')}>
+                    <div className="flex items-center space-x-2">
+                      
+                      <span>X (Twitter)</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <button
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Platform Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Platform</label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
+            {/* Content Editor */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-3">Content</label>
+              {isLoadingContent ? (
+                <div className="border rounded-xl bg-muted p-8 text-center min-h-[180px] flex items-center justify-center">
                   <div className="flex items-center space-x-2">
-                    <span className={getPlatformColor(platform)}>
-                      {getPlatformIcon(platform)}
-                    </span>
-                    <span>{getPlatformName(platform)}</span>
+                    <div className="animate-spin w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"></div>
+                    <span className="text-muted-foreground">Loading content...</span>
                   </div>
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-full">
-                <DropdownMenuItem onClick={() => setPlatform('twitter')}>
-                  <div className="flex items-center space-x-2">
-                    
-                    <span>X (Twitter)</span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Content Editor */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Content</label>
-            {isLoadingContent ? (
-              <div className="border rounded-xl bg-muted p-8 text-center min-h-[180px] flex items-center justify-center">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"></div>
-                  <span className="text-muted-foreground">Loading content...</span>
                 </div>
-              </div>
-            ) : platform === 'twitter' ? (
-              <TweetCardEditor
-                content={content}
-                onChange={setContent}
-                maxLength={getCharacterLimit(platform)}
-                placeholder="What's happening?"
-              />
-            ) : (
-              <RichTextEditor
-                content={content}
-                onChange={setContent}
-                platform={platform}
-                maxLength={getCharacterLimit(platform)}
-                placeholder={
-                  platform === 'linkedin'
-                    ? "Share an update..."
-                    : "Share your thoughts..."
-                }
-              />
-            )}
-          </div>
-
-          {/* Hashtags */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Hashtags</label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {hashtags.map((hashtag) => (
-                <span
-                  key={hashtag}
-                  className="inline-flex items-center space-x-1 bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm"
-                >
-                  <Hash className="w-3 h-3" />
-                  <span>{hashtag}</span>
-                  <button
-                    onClick={() => removeHashtag(hashtag)}
-                    className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-full p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newHashtag}
-                onChange={(e) => setNewHashtag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addHashtag()}
-                placeholder="Add hashtag..."
-                className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
-              />
-              <Button onClick={addHashtag} variant="outline">
-                <Hash className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Scheduling */}
-          {/* <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Schedule</label>
-            <div className="flex items-center space-x-3">
-              <Button
-                variant={scheduledAt ? "outline" : "default"}
-                onClick={() => setScheduledAt(null)}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Post Now
-              </Button>
-              <Button
-                variant={scheduledAt ? "default" : "outline"}
-                onClick={() => setScheduledAt(new Date())}
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule
-              </Button>
-            </div>
-            
-            {scheduledAt && (
-              <div className="mt-4 p-4 bg-muted rounded-xl">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Schedule for:</span>
-                  </div>
-                  <DatePicker
-                    selected={scheduledAt}
-                    onChange={(date) => setScheduledAt(date)}
-                    showTimeSelect
-                    timeFormat="HH:mm"
-                    timeIntervals={15}
-                    dateFormat="MMM d, yyyy h:mm aa"
-                    minDate={new Date()}
-                    className="px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
-                  />
-                </div>
-              </div>
-            )}
-          </div> */}
-        </div>
-
-        {/* Actions */}
-        <div className="p-6 border-t">
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <div className="flex space-x-3">
-              <Button variant="outline" onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Draft
-              </Button>
-              {scheduledAt ? (
-                <Button onClick={handleSchedule}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Post
-                </Button>
+              ) : platform === 'twitter' ? (
+                <TweetCardEditor
+                  content={content}
+                  onChange={setContent}
+                  maxLength={getCharacterLimit(platform)}
+                  placeholder="What's happening?"
+                />
               ) : (
-                <Button 
-                  onClick={handlePublish}
-                  disabled={isPublishing}
-                  className={isPublishing ? 'opacity-70 cursor-not-allowed' : ''}
-                >
-                  {isPublishing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Publishing...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Publish Now
-                    </>
-                  )}
-                </Button>
+                <RichTextEditor
+                  content={content}
+                  onChange={setContent}
+                  platform={platform}
+                  maxLength={getCharacterLimit(platform)}
+                  placeholder={
+                    platform === 'linkedin'
+                      ? "Share an update..."
+                      : "Share your thoughts..."
+                  }
+                />
               )}
             </div>
+
+            {/* Hashtags */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-3">Hashtags</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {hashtags.map((hashtag) => (
+                  <span
+                    key={hashtag}
+                    className="inline-flex items-center space-x-1 bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm"
+                  >
+                    <Hash className="w-3 h-3" />
+                    <span>{hashtag}</span>
+                    <button
+                      onClick={() => removeHashtag(hashtag)}
+                      className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newHashtag}
+                  onChange={(e) => setNewHashtag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addHashtag()}
+                  placeholder="Add hashtag..."
+                  className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+                />
+                <Button onClick={addHashtag} variant="outline">
+                  <Hash className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Scheduling */}
+            {/* <div>
+              <label className="block text-sm font-medium text-foreground mb-3">Schedule</label>
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant={scheduledAt ? "outline" : "default"}
+                  onClick={() => setScheduledAt(null)}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Post Now
+                </Button>
+                <Button
+                  variant={scheduledAt ? "default" : "outline"}
+                  onClick={() => setScheduledAt(new Date())}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Schedule
+                </Button>
+              </div>
+              
+              {scheduledAt && (
+                <div className="mt-4 p-4 bg-muted rounded-xl">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Schedule for:</span>
+                    </div>
+                    <DatePicker
+                      selected={scheduledAt}
+                      onChange={(date) => setScheduledAt(date)}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      dateFormat="MMM d, yyyy h:mm aa"
+                      minDate={new Date()}
+                      className="px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              )}
+            </div> */}
+          </div>
+
+          {/* Actions */}
+          <div className="p-6 border-t">
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <div className="flex space-x-3">
+                <Button variant="outline" onClick={handleSave}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Draft
+                </Button>
+                {scheduledAt ? (
+                  <Button onClick={handleSchedule}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Schedule Post
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handlePublish}
+                    disabled={isPublishing}
+                    className={isPublishing ? 'opacity-70 cursor-not-allowed' : ''}
+                  >
+                    {isPublishing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Publish Now
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Toast Notifications */}
+        {toast && (
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
+            toast.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {toast.type === 'success' ? (
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+              <span className="font-medium">{toast.message}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Toast Notifications */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
-          toast.type === 'success' 
-            ? 'bg-green-500 text-white' 
-            : 'bg-red-500 text-white'
-        }`}>
-          <div className="flex items-center space-x-2">
-            {toast.type === 'success' ? (
-              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-            <span className="font-medium">{toast.message}</span>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Subscription Modal */}
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal} 
+        onClose={() => setShowSubscriptionModal(false)} 
+      />
+    </>
   );
 }
