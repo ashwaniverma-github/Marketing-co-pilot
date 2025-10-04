@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import posthog from 'posthog-js';
 import { eventBus, EVENTS } from '@/lib/event-bus';
 import { RichTextEditor } from './ui/rich-text-editor';
-import { TweetCardEditor, convertHtmlToTweetText } from './ui/tweet-card-editor';
+import { TweetCardEditor, convertHtmlToTweetText, defaultAiEdit } from './ui/tweet-card-editor';
 import { Button } from './ui/button';
 import {
   Calendar,
@@ -387,6 +387,7 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                 <TweetCardEditor
                   content={content}
                   onChange={setContent}
+                  onAiEdit={defaultAiEdit}
                   maxLength={getCharacterLimit(platform)}
                   placeholder="What's happening?"
                 />

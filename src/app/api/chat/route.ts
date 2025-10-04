@@ -106,4 +106,75 @@ Product Information: ${JSON.stringify(scraped ? {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { content, customPrompt } = body as {
+      content: string;
+      customPrompt?: string;
+    };
+
+    if (!content) {
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    }
+
+    // Adjust system prompt based on whether custom prompt exists
+    const system = customPrompt 
+      ? `You are a professional tweet editor. Follow the user's specific instructions carefully while keeping the tweet engaging and effective. If the user asks for emojis, add them. If they ask for a specific tone or style, apply it exactly as requested.`
+      : `You are a professional tweet editor. Your task is to refine and improve the given tweet while maintaining its core message.
+
+EDITING GUIDELINES:
+- Preserve the original intent and key information
+- Improve clarity, conciseness, and engagement
+- Keep it under 280 characters (unless it's already longer)
+- Use a conversational, professional tone
+- Make the tweet more compelling and clear don't add hashtags or emojis unless asked to`;
+
+    // Construct the user message with optional custom prompt
+    const userMessage = customPrompt 
+      ? `Original tweet: "${content}"
+
+Your task: ${customPrompt}
+
+Important: Return ONLY the edited tweet, no explanations or additional text.`
+      : `Edit this tweet to make it more engaging and clear. Return ONLY the edited tweet:
+
+"${content}"`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: userMessage }
+      ],
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+
+    let editedContent = response.choices[0]?.message?.content?.trim() || content;
+
+    // Remove quotes if AI wrapped the response in them
+    if (editedContent.startsWith('"') && editedContent.endsWith('"')) {
+      editedContent = editedContent.slice(1, -1);
+    }
+    if (editedContent.startsWith("'") && editedContent.endsWith("'")) {
+      editedContent = editedContent.slice(1, -1);
+    }
+
+    return NextResponse.json({ 
+      originalContent: content, 
+      editedContent 
+    });
+
+  } catch (e) {
+    console.error('Tweet edit error:', e);
+    return NextResponse.json({ error: 'Tweet editing failed' }, { status: 500 });
+  }
+}
+
 
