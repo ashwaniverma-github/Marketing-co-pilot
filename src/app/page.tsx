@@ -101,11 +101,11 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-foreground leading-tight mb-6 max-w-3xl mx-auto">
-            Built For Indie Hackers To Grow Their App <br />
+            Write tweets and contents that grows your app <br />
             <span className="text-orange-500"></span>
           </h1>
           <p className="text-base sm:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
-            Our AI understands your app and your audience, and helps you grow your app.
+            Make it a habit to write tweets , contents and manage your app on indiegrowth using AI
           </p>
           <div className="flex justify-center space-x-4">
             <a href={session ? "/dashboard" : "/login"} className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
@@ -124,7 +124,7 @@ export default function Home() {
               Just Give Us The Url Of Your App And We Will Handle The Rest
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground">
-              Our AI Handles Content, Marketing, Growth and More.
+              Our AI Handles Content, Marketing, Growth and More For Your App , just ask
             </p>
           </div>
 
