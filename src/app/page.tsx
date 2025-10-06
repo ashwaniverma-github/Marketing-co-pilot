@@ -100,12 +100,11 @@ export default function Home() {
               </code>
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-foreground leading-tight mb-6 max-w-3xl mx-auto">
+          <h1 className="text-4xl  sm:text-5xl md:text-6xl  font-sans text-foreground leading-tight mb-6 max-w-3xl mx-auto">
             Write tweets and contents that grows your app <br />
-            <span className="text-orange-500"></span>
           </h1>
           <p className="text-base sm:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
-            Make it a habit to write tweets , contents and manage your app on indiegrowth using AI
+            Make it a habit to write tweets , contents and manage your app on indiegrowth using AI . Just get started and you will love it. 
           </p>
           <div className="flex justify-center space-x-4">
             <a href={session ? "/dashboard" : "/login"} className="bg-cyan-900 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold text-base sm:text-lg flex items-center">
