@@ -3,7 +3,7 @@ import LandingNavbar from '@/components/landing-navbar';
 import Hero from '@/components/hero';
 import UseCase from '@/components/use-case';
 import Footer from '@/components/footer';
-import Cta from '@/components/cta';
+import CTA from '@/components/cta';
 import CTAFooter from '@/components/cta2';
 
 export default function Home() {
@@ -12,7 +12,7 @@ export default function Home() {
       <LandingNavbar/>
       <Hero/>
       <UseCase/>
-      <Cta/>
+      <CTA/>
       <FeatureSection/>
       <CTAFooter/>
       <Footer/>

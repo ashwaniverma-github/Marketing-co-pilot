@@ -1,7 +1,7 @@
 // app/api/dodo/webhook/route.ts
 import { Webhook } from "standardwebhooks";
 import { headers } from "next/headers";
-import { dodopayments } from "@/lib/dodopayments";
+import { getDodoPayments } from "@/lib/dodopayments";
 import { db } from "@/lib/db";
 
 const webhook = new Webhook(process.env.DODO_PAYMENTS_WEBHOOK_KEY!);
@@ -86,6 +86,7 @@ async function findUserForCustomerAndMetadata(customer: any, metadata: any) {
 
 export async function POST(request: Request) {
   const headersList = await headers();
+  const dodopayments = getDodoPayments();
 
   try {
     const rawBody = await request.text();

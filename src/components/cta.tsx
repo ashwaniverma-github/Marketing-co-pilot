@@ -1,6 +1,6 @@
 'use client'
 import { useSession } from 'next-auth/react';
-export default function (){
+export default function CTA(){
     const {data:session} = useSession()
     return(
         <section className="px-6 py-20">

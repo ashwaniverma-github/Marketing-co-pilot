@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { dodopayments } from "@/lib/dodopayments";
+import { getDodoPayments } from "@/lib/dodopayments";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const productId = url.searchParams.get("productId");
     const quantityParam = url.searchParams.get("quantity");
     const quantity = quantityParam ? Number(quantityParam) : 1;
+    const dodopayments = getDodoPayments();
 
     if (!productId) {
       return NextResponse.json({ error: "productId is required" }, { status: 400 });

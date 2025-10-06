@@ -1,9 +1,10 @@
-import { dodopayments } from "@/lib/dodopayments";
+import { getDodoPayments } from "@/lib/dodopayments";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     console.log('Fetching products from Dodo Payments');
+    const dodopayments = getDodoPayments();
     const products = await dodopayments.products.list();
     
     console.log(`Fetched ${products.items.length} products`);
