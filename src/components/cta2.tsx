@@ -29,9 +29,9 @@ export default function CTAFooter() {
                 active:scale-100
                 group
               ">
-                <span className="block transition-all duration-1000 group-hover:scale-130">
+                <a href={session ? '/dashboard' : '/login'} className="block transition-all duration-1000 group-hover:scale-130">
                   {session?'Go to app':'Get started'}
-                </span>
+                </a>
               </button>
               
               <p className="text-sm font-medium">
