@@ -132,7 +132,7 @@ export function SubscriptionModal({
               className="px-6 py-3 bg-foreground text-background rounded-lg hover:bg-foreground/90 font-medium transition-all flex items-center space-x-2"
             >
               {isCheckingOut ? (
-                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                <div className="animate-spin w-5 h-5 border-2  border-t-transparent rounded-full"></div>
               ) : (
                 <span>Start Your Growth Journey</span>
               )}
