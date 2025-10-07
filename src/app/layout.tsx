@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     default: "Indiegrowth - Your App's Growth Co-Pilot",
     template: "%s | Indiegrowth"
   },
-  description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+  description: "Just Give Us The Url Of Your App And We Will help you write tweets and contents that grows your app",
   keywords: ["app growth", "startup", "product analytics", "growth hacking"],
   authors: [{ name: "Indiegrowth Team" }],
   creator: "ashwani",
