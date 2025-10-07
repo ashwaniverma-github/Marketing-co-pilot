@@ -33,16 +33,16 @@ export default function AboutPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">My Mission</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Indiegrowth is dedicated to empowering indie developers and entrepreneurs by providing cutting-edge AI-driven tools to accelerate product growth, marketing, and user engagement.
+            Indiegrowth is dedicated to empowering indie developers and entrepreneurs by providing cutting-edge AI-driven tools to accelerate product growth, marketing, and user engagement  by creating content .
           </p>
         </section>
 
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">What I Do</h2>
           <ul className="list-disc pl-6 text-muted-foreground space-y-3">
-            <li>AI-powered market research and insights</li>
-            <li>Intelligent social media and marketing assistance</li>
-            <li>Product positioning and growth strategies</li>
+            <li>Write content and tweets that resonates with your product</li>
+            <li>Make it a habit and track your progress </li>
+            <li>Ask AI for new ideas and many more</li>
             <li>Personalized AI chat for product development</li>
           </ul>
         </section>
