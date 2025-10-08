@@ -125,14 +125,15 @@ export async function PATCH(request: NextRequest) {
 
     // Adjust system prompt based on whether custom prompt exists
     const system = customPrompt 
-      ? `You are a professional tweet editor. Follow the user's specific instructions carefully while keeping the tweet engaging and effective. If the user asks for emojis, add them. If they ask for a specific tone or style, apply it exactly as requested.`
-      : `You are a professional tweet editor. Your task is to refine and improve the given tweet while maintaining its core message.
+      ? `You are a professional tweet editor. Follow the user's specific instructions carefully while keeping the tweet engaging and effective. Don't add emoji if not asked . If they ask for a specific tone or style, apply it exactly as requested.`
+      : `You are a professional tweet editor. Don't add emoji if not asked, Your task is to refine and improve the given tweet while maintaining its core message.
 
 EDITING GUIDELINES:
-- Preserve the original intent and key information
-- Improve clarity, conciseness, and engagement
-- Keep it under 280 characters (unless it's already longer)
-- Use a conversational, professional tone
+- Preserve the original intent and key information.
+- Don't add emoji if not asked.
+- Improve clarity, conciseness, and engagement.
+- Keep it under 280 characters (unless it's already longer).
+- Use a conversational, professional tone.
 - Make the tweet more compelling and clear don't add hashtags or emojis unless asked to`;
 
     // Construct the user message with optional custom prompt
