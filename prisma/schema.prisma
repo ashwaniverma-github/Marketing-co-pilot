@@ -26,7 +26,8 @@ model User {
   chatHistories    ChatHistory[]
   subscription     Subscription?
   payments         Payment[]
-
+  oneTimePurchases OneTimePurchase[]
+ 
   // Gamification fields
   xp                Int             @default(0)
   level             Int             @default(1)
@@ -93,6 +94,25 @@ model Payment {
   subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
   
   @@map("payments")
+}
+
+model OneTimePurchase {
+  id                String   @id @default(cuid())
+  userId            String
+  dodoPaymentId     String?  @unique
+  checkoutSessionId String?
+  productId         String
+  amount            Int      @default(0) // Amount in cents
+  currency          String   @default("USD")
+  status            OneTimePurchaseStatus @default(PENDING)
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("one_time_purchases")
 }
 
 enum SubscriptionStatus {
@@ -424,5 +444,12 @@ enum GamificationEventType {
   CHALLENGE_COMPLETED
   CALENDAR_USED
   X_POST
+}
+
+enum OneTimePurchaseStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
 }
 

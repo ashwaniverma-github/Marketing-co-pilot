@@ -535,7 +535,14 @@ export const authOptions: NextAuthOptions = {
           const hasActiveSubscription = !!userWithSubscription?.subscription && 
             userWithSubscription.subscription.status === 'ACTIVE';
 
-          (session as any).hasActiveSubscription = hasActiveSubscription;
+          // Check if user is on PRO plan (includes one-time purchases)
+          const isProUser = userWithSubscription?.plan === 'PRO';
+
+          (session as any).hasActiveSubscription = hasActiveSubscription || isProUser;
+          (session as any).user = {
+            ...(session as any).user,
+            plan: userWithSubscription?.plan || 'FREE'
+          };
 
           identifyServerUser(String(uid), {
             email: session?.user?.email,

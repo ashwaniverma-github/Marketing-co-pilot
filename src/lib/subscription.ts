@@ -31,25 +31,64 @@ export async function ensureActiveSubscription(redirectToLogin = true) {
   // Find user (try id first, then email)
   let user = null;
   if (userId) {
-    user = await db.user.findUnique({ where: { id: userId }, include: { subscription: true } });
+    user = await db.user.findUnique({ 
+      where: { id: userId }, 
+      include: { 
+        subscription: true, 
+        oneTimePurchases: {
+          where: { status: "SUCCEEDED" },
+          orderBy: { completedAt: "desc" },
+          take: 1
+        } 
+      } 
+    });
   }
   if (!user && email) {
-    user = await db.user.findFirst({ where: { email }, include: { subscription: true } });
+    user = await db.user.findFirst({ 
+      where: { email }, 
+      include: { 
+        subscription: true, 
+        oneTimePurchases: {
+          where: { status: "SUCCEEDED" },
+          orderBy: { completedAt: "desc" },
+          take: 1
+        } 
+      } 
+    });
   }
 
   if (!user) {
     return { ok: false, reason: "no_user_record" };
   }
 
+  // Check for active subscription or valid one-time purchase
   const sub = user.subscription;
-  const isActive = !!sub && sub.status === "ACTIVE";
+  const oneTimePurchase = user.oneTimePurchases?.[0];
+  
+  const isActiveSubscription = !!sub && sub.status === "ACTIVE";
+  const isValidOneTimePurchase = !!oneTimePurchase && 
+    user.plan === "PRO" && 
+    // Optional: Add expiration logic if needed
+    (!oneTimePurchase.completedAt || 
+     (new Date(oneTimePurchase.completedAt).getTime() > Date.now() - 365 * 24 * 60 * 60 * 1000));
 
-  if (!isActive) {
-    return { ok: false, reason: "no_active_subscription", user, subscription: sub ?? null };
+  if (!isActiveSubscription && !isValidOneTimePurchase) {
+    return { 
+      ok: false, 
+      reason: "no_active_subscription", 
+      user, 
+      subscription: sub ?? null,
+      oneTimePurchase: oneTimePurchase ?? null
+    };
   }
 
   // success
-  return { ok: true, user, subscription: sub };
+  return { 
+    ok: true, 
+    user, 
+    subscription: sub,
+    oneTimePurchase: oneTimePurchase ?? null
+  };
 }
 
 /**

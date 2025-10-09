@@ -300,11 +300,14 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
 
   // Check free usage before sending message
   const checkFreeUsage = async () => {
-    // First, check if user has an active subscription
+    // First, check if user has an active subscription or one-time purchase
     const hasActiveSubscription = (session as any)?.hasActiveSubscription;
+    const userPlan = (session as any)?.user?.plan;
     
-    // If user has an active subscription, always allow usage
-    if (hasActiveSubscription) {
+    // If user has an active subscription or is on PRO plan, always allow usage
+    if (hasActiveSubscription || userPlan === 'PRO') {
+      // Ensure subscription modal is not shown
+      setShowSubscriptionModal(false);
       return true;
     }
 

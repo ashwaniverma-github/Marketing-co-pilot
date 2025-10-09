@@ -221,6 +221,74 @@ export async function POST(request: Request) {
             break;
           }
 
+          // Branch: One-time purchase flow
+          if (metadata?.checkoutType === "one_time") {
+            try {
+              // Update latest pending OTP for this user, else create one
+              const latestPending = await db.oneTimePurchase.findFirst({
+                where: { userId: paymentUser.id, status: "PENDING" },
+                orderBy: { createdAt: "desc" }
+              });
+
+              const amount = typeof paymentData.total_amount === "number" ? paymentData.total_amount : 0;
+              const currency = paymentData.currency || "USD";
+              const processedAt = paymentData.created_at ? new Date(paymentData.created_at) : new Date();
+
+              if (latestPending) {
+                await db.oneTimePurchase.update({
+                  where: { id: latestPending.id },
+                  data: {
+                    dodoPaymentId: paymentData.payment_id,
+                    amount,
+                    currency,
+                    status: "SUCCEEDED",
+                    completedAt: processedAt
+                  }
+                });
+              } else {
+                await db.oneTimePurchase.create({
+                  data: {
+                    userId: paymentUser.id,
+                    dodoPaymentId: paymentData.payment_id,
+                    productId: metadata?.productId || "unknown",
+                    amount,
+                    currency,
+                    status: "SUCCEEDED",
+                    completedAt: processedAt
+                  }
+                });
+              }
+
+              // Also log into generic payments table (subscriptionId null for one-time)
+              await db.payment.create({
+                data: {
+                  userId: paymentUser.id,
+                  subscriptionId: null,
+                  dodoPaymentId: paymentData.payment_id,
+                  amount,
+                  currency,
+                  status: paymentData.status || "succeeded",
+                  paymentMethod: paymentData.payment_method || null,
+                  processedAt: processedAt
+                }
+              }).catch(() => {});
+
+              // Update user plan to PRO for one-time purchase
+              await db.user.update({ 
+                where: { id: paymentUser.id }, 
+                data: { 
+                  plan: "PRO"
+                } 
+              }).catch(console.error);
+
+            } catch (e) {
+              console.error("Failed to persist one-time purchase success", e);
+              await sendAdminAlert({ event: "one_time.persist.failed", error: String(e), paymentData });
+            }
+            break;
+          }
+
+          // Subscription flow (existing implementation)
           // compute start and end dates robustly
           const start = safeDate(paymentData.created_at) || new Date();
 
@@ -293,6 +361,91 @@ export async function POST(request: Request) {
 
           await db.user.update({ where: { id: paymentUser.id }, data: { plan: "PRO" } }).catch(() => {});
 
+          break;
+        }
+
+        case "payment.failed": {
+          try {
+            const paymentData: any = await dodopayments.payments.retrieve(payload.data.payment_id);
+            const metadata = paymentData.metadata || {};
+            if (metadata?.checkoutType === "one_time") {
+              // Update latest pending OTP to FAILED (or create record if none)
+              const latestPending = await db.oneTimePurchase.findFirst({
+                where: { userId: (await findUserForCustomerAndMetadata(paymentData.customer || {}, metadata))?.id ?? "" , status: "PENDING" },
+                orderBy: { createdAt: "desc" }
+              }).catch(() => null);
+
+              const paymentUser = await findUserForCustomerAndMetadata(paymentData.customer || {}, metadata);
+              if (paymentUser) {
+                if (latestPending) {
+                  await db.oneTimePurchase.update({
+                    where: { id: latestPending.id },
+                    data: {
+                      dodoPaymentId: paymentData.payment_id,
+                      status: "FAILED",
+                      completedAt: new Date()
+                    }
+                  });
+                } else {
+                  await db.oneTimePurchase.create({
+                    data: {
+                      userId: paymentUser.id,
+                      dodoPaymentId: paymentData.payment_id,
+                      productId: metadata?.productId || "unknown",
+                      amount: typeof paymentData.total_amount === "number" ? paymentData.total_amount : 0,
+                      currency: paymentData.currency || "USD",
+                      status: "FAILED",
+                      completedAt: new Date()
+                    }
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Failed to persist one-time purchase failure", e);
+          }
+          break;
+        }
+
+        case "payment.cancelled": {
+          try {
+            const paymentData: any = await dodopayments.payments.retrieve(payload.data.payment_id);
+            const metadata = paymentData.metadata || {};
+            if (metadata?.checkoutType === "one_time") {
+              const paymentUser = await findUserForCustomerAndMetadata(paymentData.customer || {}, metadata);
+              if (paymentUser) {
+                const latestPending = await db.oneTimePurchase.findFirst({
+                  where: { userId: paymentUser.id, status: "PENDING" },
+                  orderBy: { createdAt: "desc" }
+                }).catch(() => null);
+
+                if (latestPending) {
+                  await db.oneTimePurchase.update({
+                    where: { id: latestPending.id },
+                    data: {
+                      dodoPaymentId: paymentData.payment_id,
+                      status: "CANCELLED",
+                      completedAt: new Date()
+                    }
+                  });
+                } else {
+                  await db.oneTimePurchase.create({
+                    data: {
+                      userId: paymentUser.id,
+                      dodoPaymentId: paymentData.payment_id,
+                      productId: metadata?.productId || "unknown",
+                      amount: 0,
+                      currency: "USD",
+                      status: "CANCELLED",
+                      completedAt: new Date()
+                    }
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Failed to persist one-time purchase cancellation", e);
+          }
           break;
         }
 
