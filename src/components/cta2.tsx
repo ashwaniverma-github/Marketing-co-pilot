@@ -8,7 +8,7 @@ export default function CTAFooter() {
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold  tracking-tight leading-tight 
-              transform transition-all duration-700 hover:scale-105 hover:tracking-wider">
+              transform transition-all duration-700">
               Get started with<br />Indiegrowth
             </h1>
             
