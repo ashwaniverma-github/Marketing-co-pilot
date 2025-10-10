@@ -209,7 +209,7 @@ export function TweetCardEditor({
   return (
     <div className="relative">
       <div className="bg-card border border-gray-300 rounded-xl w-full hover:shadow-sm transition-shadow">
-        <div className="flex items-start space-x-3 p-4">
+        <div className="flex items-start space-x-3 p-2 sm:p-4">
           {/* User Avatar */}
           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
             {(session as any)?.xAvatar ? (
@@ -236,8 +236,8 @@ export function TweetCardEditor({
           {/* Content Area */}
           <div className="flex-1 min-w-0">
             {/* User Info */}
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="font-semibold text-foreground">
+            <div className="flex items-center space-x-2 mb-2 ">
+              <span className="font-semibold text-foreground text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis max-w-full inline-block">
                 {(session as any)?.xDisplayName || session?.user?.name || 'User'}
               </span>
               {(session as any)?.xVerified && (

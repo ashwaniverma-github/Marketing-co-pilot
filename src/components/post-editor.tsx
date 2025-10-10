@@ -73,7 +73,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       setScheduledAt(post.scheduledAt || null);
       setStatus(post.status);
     } else {
-      // Reset form when no post is provided (new post)
       setContent('');
       setPlatform('twitter');
       setHashtags([]);
@@ -82,7 +81,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     }
   }, [post]);
 
-  // Clear toast when modal closes
   useEffect(() => {
     if (!isOpen) {
       setToast(null);
@@ -91,11 +89,9 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     }
   }, [isOpen]);
 
-  // Ensure content updates immediately when post changes (even if modal is already open)
   useEffect(() => {
     if (post && isOpen) {
       setIsLoadingContent(true);
-      // Small delay to show loading state and ensure smooth transition
       setTimeout(() => {
         setContent(post.content);
         setPlatform(post.platform);
@@ -122,16 +118,13 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
   };
 
   const handlePublish = async () => {
-    // First, check if user has an active subscription
     const hasActiveSubscription = (session as any)?.hasActiveSubscription;
     
-    // If no active subscription, show subscription modal
     if (!hasActiveSubscription) {
       setShowSubscriptionModal(true);
       return;
     }
 
-    // Check if user has X connection
     if (!hasXConnection) {
       posthog.capture('connect_x_prompt_opened');
       onShowConnectX?.();
@@ -141,12 +134,10 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     setIsPublishing(true);
     
     try {
-      // Convert HTML content to plain text with line breaks preserved
       const tweetContent = platform === 'twitter' 
         ? convertHtmlToTweetText(content)
         : content;
 
-      // Post to social media
       const response = await fetch('/api/post-to-social', {
         method: 'POST',
         headers: {
@@ -161,7 +152,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       const result = await response.json();
 
       if (!response.ok) {
-        // Handle specific auth errors
         if (result.needsAuth) {
           onShowConnectX?.();
           return;
@@ -183,13 +173,10 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       
       onPublish?.(updatedPost);
       
-      // Emit event that a tweet was posted (with the original content for identification)
       eventBus.emit(EVENTS.TWEET_POSTED, content);
       
-      // Show success toast
       setToast({ type: 'success', message: 'Successfully posted on X!' });
       
-      // Close modal after a short delay to show toast
       setTimeout(() => {
         onClose();
         setToast(null);
@@ -199,7 +186,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       console.error('Failed to publish post:', error);
       setToast({ type: 'error', message: `Failed to post on X. ${error instanceof Error ? error.message : 'Please try again.'}` });
       
-      // Auto-dismiss error toast after 5 seconds
       setTimeout(() => {
         setToast(null);
       }, 5000);
@@ -212,12 +198,10 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
     if (!scheduledAt) return;
     
     try {
-      // Convert HTML content to plain text for Twitter
       const tweetContent = platform === 'twitter' 
         ? convertHtmlToTweetText(content)
         : content;
 
-      // Schedule the post
       const response = await fetch('/api/post-to-social', {
         method: 'POST',
         headers: {
@@ -248,7 +232,6 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
       onSave(updatedPost);
       onClose();
       
-      // Show success message
       alert(`Post scheduled for ${scheduledAt.toLocaleString()}!`);
     } catch (error) {
       console.error('Failed to schedule post:', error);
@@ -323,22 +306,22 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-card border rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-card border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-semibold text-foreground">
+          <div className="p-4 sm:p-6 border-b">
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-semibold text-foreground truncate">
                   {post ? 'Edit Post' : 'Create New Post'}
                 </h2>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                   Create engaging content for your social media platforms
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg flex-shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -346,10 +329,10 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Platform Selection */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-3">Platform</label>
+              <label className="block text-sm font-medium text-foreground mb-2 sm:mb-3">Platform</label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between">
@@ -357,15 +340,14 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
                       <span className={getPlatformColor(platform)}>
                         {getPlatformIcon(platform)}
                       </span>
-                      <span>{getPlatformName(platform)}</span>
+                      <span className="text-sm sm:text-base">{getPlatformName(platform)}</span>
                     </div>
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-4 h-4 flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-full">
                   <DropdownMenuItem onClick={() => setPlatform('twitter')}>
                     <div className="flex items-center space-x-2">
-                      
                       <span>X (Twitter)</span>
                     </div>
                   </DropdownMenuItem>
@@ -375,12 +357,12 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
 
             {/* Content Editor */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-3">Content</label>
+              <label className="block text-sm font-medium text-foreground mb-2 sm:mb-3">Content</label>
               {isLoadingContent ? (
-                <div className="border rounded-xl bg-muted p-8 text-center min-h-[180px] flex items-center justify-center">
+                <div className="border rounded-xl bg-muted p-6 sm:p-8 text-center min-h-[180px] flex items-center justify-center">
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"></div>
-                    <span className="text-muted-foreground">Loading content...</span>
+                    <span className="text-sm text-muted-foreground">Loading content...</span>
                   </div>
                 </div>
               ) : platform === 'twitter' ? (
@@ -408,71 +390,72 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
 
             {/* Hashtags */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-3">Hashtags</label>
+              <label className="block text-sm font-medium text-foreground mb-2 sm:mb-3">Hashtags</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {hashtags.map((hashtag) => (
                   <span
                     key={hashtag}
-                    className="inline-flex items-center space-x-1 bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm"
+                    className="inline-flex items-center space-x-1 bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm"
                   >
-                    <Hash className="w-3 h-3" />
-                    <span>{hashtag}</span>
+                    <Hash className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate max-w-[150px] sm:max-w-none">{hashtag}</span>
                     <button
                       onClick={() => removeHashtag(hashtag)}
-                      className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-full p-0.5"
+                      className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-full p-0.5 flex-shrink-0"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
               </div>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={newHashtag}
                   onChange={(e) => setNewHashtag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addHashtag()}
                   placeholder="Add hashtag..."
-                  className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+                  className="flex-1 px-3 py-2 text-sm sm:text-base bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                 />
-                <Button onClick={addHashtag} variant="outline">
-                  <Hash className="w-4 h-4" />
+                <Button onClick={addHashtag} variant="outline" className="w-full sm:w-auto">
+                  <Hash className="w-4 h-4 sm:mr-2" />
+                  <span className="sm:inline hidden">Add</span>
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="p-6 border-t">
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={onClose}>
+          <div className="p-4 sm:p-6 border-t">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
+              <Button variant="outline" onClick={onClose} className="w-full sm:w-auto order-2 sm:order-1">
                 Cancel
               </Button>
-              <div className="flex space-x-3">
-                <Button variant="outline" onClick={handleSave}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
+                <Button variant="outline" onClick={handleSave} className="w-full sm:w-auto">
                   <Save className="w-4 h-4 mr-2" />
-                  Save Draft
+                  <span className="text-sm sm:text-base">Save Draft</span>
                 </Button>
                 {scheduledAt ? (
-                  <Button onClick={handleSchedule}>
+                  <Button onClick={handleSchedule} className="w-full sm:w-auto">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Schedule Post
+                    <span className="text-sm sm:text-base">Schedule Post</span>
                   </Button>
                 ) : (
                   <Button 
                     onClick={handlePublish}
                     disabled={isPublishing}
-                    className={isPublishing ? 'opacity-70 cursor-not-allowed' : ''}
+                    className={`w-full sm:w-auto ${isPublishing ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {isPublishing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Publishing...
+                        <span className="text-sm sm:text-base">Publishing...</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4 mr-2" />
-                        Publish Now
+                        <span className="text-sm sm:text-base">Publish Now</span>
                       </>
                     )}
                   </Button>
@@ -484,26 +467,26 @@ export function PostEditor({ post, isOpen, onClose, onSave, onPublish, hasXConne
 
         {/* Toast Notifications */}
         {toast && (
-          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
+          <div className={`fixed top-4 right-4 left-4 sm:left-auto z-50 p-3 sm:p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
             toast.type === 'success' 
               ? 'bg-green-500 text-white' 
               : 'bg-red-500 text-white'
           }`}>
             <div className="flex items-center space-x-2">
               {toast.type === 'success' ? (
-                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
               ) : (
-                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
-              <span className="font-medium">{toast.message}</span>
+              <span className="font-medium text-sm sm:text-base">{toast.message}</span>
             </div>
           </div>
         )}
