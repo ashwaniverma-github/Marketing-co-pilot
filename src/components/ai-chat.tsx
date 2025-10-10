@@ -561,10 +561,10 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between ">
-            <div className="flex items-center sm:space-x-2 space-x-1">
-              <span className="font-semibold text-foreground text-sm sm:text-base">
+        <div className="flex-1 min-w-0 ">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center  sm:space-x-2 space-x-1 ">
+              <span className="font-semibold text-foreground text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis max-w-full inline-block">
                 {(session as any)?.xDisplayName || session?.user?.name || 'User'}
               </span>
               {(session as any)?.xVerified && (
