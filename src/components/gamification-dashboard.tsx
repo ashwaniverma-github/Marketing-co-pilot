@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Zap, Target, Calendar, TrendingUp, Star, Flame, CheckCircle } from 'lucide-react';
+import { Trophy, Zap, Target, Calendar, TrendingUp, Star, Flame, CheckCircle, Sparkles } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
 interface GamificationProfile {
@@ -36,11 +36,9 @@ const LEVEL_COLORS = [
   'bg-gray-500', 'bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-yellow-500'
 ];
 
-// Motion wrappers (use "as any" to avoid strict typing issues with your UI components)
 const MotionButton = motion(Button as any);
 const MotionCard = motion(Card as any);
 
-// simple variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45 } }
@@ -49,7 +47,6 @@ const fadeInUp = {
 const cardHover = { whileHover: { y: -6, scale: 1.01 }, whileTap: { scale: 0.995 } };
 const btnHoverTransition = { type: 'spring', stiffness: 400, damping: 28 };
 
-// Toast animation variants
 const toastVariants = {
   hidden: { 
     opacity: 0, 
@@ -68,11 +65,37 @@ const toastVariants = {
   }
 };
 
+// Confetti particle component
+const ConfettiParticle = ({ delay }: { delay: number }) => (
+  <motion.div
+    className="absolute w-2 h-2 rounded-full"
+    style={{
+      background: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899'][Math.floor(Math.random() * 5)],
+      left: '50%',
+      top: '50%',
+    }}
+    initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+    animate={{
+      opacity: [0, 1, 0],
+      scale: [0, 1.5, 0],
+      x: (Math.random() - 0.5) * 200,
+      y: (Math.random() - 0.5) * 200,
+    }}
+    transition={{
+      duration: 1.2,
+      delay,
+      ease: "easeOut"
+    }}
+  />
+);
+
 export default function GamificationDashboard() {
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [alreadyCheckedInToday, setAlreadyCheckedInToday] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
 
   useEffect(() => {
     fetchProfile();
@@ -105,15 +128,18 @@ export default function GamificationDashboard() {
       if (response.ok) {
         const data = await response.json();
         if (data.alreadyCheckedIn) {
-          // User has already checked in today
           setAlreadyCheckedInToday(true);
-          
-          // Reset after a short animation
           setTimeout(() => {
             setAlreadyCheckedInToday(false);
           }, 2000);
         } else {
-          // Successful first check-in
+          // Show celebration
+          setXpGained(5);
+          setShowConfetti(true);
+          setTimeout(() => {
+            setShowConfetti(false);
+            setXpGained(0);
+          }, 2000);
           await fetchProfile();
         }
       }
@@ -146,47 +172,21 @@ export default function GamificationDashboard() {
     return 'Time to level up! ⚡';
   };
 
-  // Motion variants for card interactions
   const cardVariants = {
     hover: { 
-      scale: 0.95,  // Slightly less aggressive scaling
+      scale: 0.95,
       transition: { 
         type: 'spring', 
-        stiffness: 300,  // More responsive spring
-        damping: 10      // Bouncy effect
+        stiffness: 300,
+        damping: 10
       }
     },
     tap: { 
-      scale: 1.02,  // Slightly less aggressive scaling
+      scale: 1.02,
       transition: { 
         type: 'spring', 
         stiffness: 500,
         damping: 30 
-      }
-    }
-  };
-
-  // Congrats animation variants
-  const congratsVariants = {
-    initial: { 
-      scale: 1, 
-      opacity: 0,
-      rotate: 0
-    },
-    animate: { 
-      scale: 1.2,
-      opacity: 1,
-      rotate: 10,
-      transition: {
-        duration: 0.5
-      }
-    },
-    exit: {
-      scale: 1,
-      opacity: 0,
-      rotate: 0,
-      transition: {
-        duration: 0.5
       }
     }
   };
@@ -232,10 +232,160 @@ export default function GamificationDashboard() {
       animate="visible"
       variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06 } } }}
     >
+      {/* Daily Check-in Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-gradient-to-br from-cyan-900 via-cyan-800 to-blue-900 border-none overflow-hidden relative">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
+          
+          <CardContent className="p-8 relative z-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 ">
+              <div className="text-center md:text-left flex-1">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-4"
+                >
+                  <Flame className="w-5 h-5 text-orange-400" />
+                  <span className="text-white font-semibold">{profile.streak} Day Streak!</span>
+                </motion.div>
+                
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-3">
+                  <Sparkles className="w-8 h-8 text-yellow-300" />
+                  Daily Check-In
+                </h2>
+                <p className="text-cyan-100 text-lg mb-4 px-2">
+                  Did you post today? Keep your streak alive and earn XP! 
+                </p>
+
+                <div className="relative inline-block">
+                  <MotionButton
+                    onClick={handleCheckIn}
+                    disabled={checkingIn}
+                    className="bg-white hover:bg-gray-100 text-cyan-900 px-10 py-6 text-xl font-bold rounded-2xl shadow-2xl inline-flex items-center justify-center relative overflow-hidden"
+                    whileHover={{ 
+                      scale: 1.05, 
+                      y: -5,
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={btnHoverTransition}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-yellow-200 via-green-200 to-blue-200"
+                      initial={{ x: '-100%' }}
+                      whileHover={{ x: '100%' }}
+                      transition={{ duration: 0.6 }}
+                    />
+                    <span className="relative z-10 flex items-center gap-3">
+                      {checkingIn ? (
+                        <>
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-900"></div>
+                          Checking in...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-7 h-7" />
+                          I Posted Today!
+                          <span className="py-1 rounded-full text-md font-bold">
+                            +5 XP
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </MotionButton>
+
+                  {/* Confetti Effect */}
+                  {showConfetti && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {Array.from({ length: 20 }).map((_, i) => (
+                        <ConfettiParticle key={i} delay={i * 0.05} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-cyan-200 text-sm mt-4 italic">
+                  Honor system - we trust you!
+                </p>
+              </div>
+
+              {/* Stats Preview */}
+              <motion.div 
+                className="flex justify-between space-x-4  bg-white/10 backdrop-blur-sm p-6 rounded-2xl"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="flex items-center text-white">
+                  <div>
+                    <p className="text-sm opacity-80">This Week</p>
+                    <p className="text-2xl font-bold">{profile.weeklyCheckIns} days</p>
+                  </div>
+                </div>
+                <div className="flex items-center  text-white">
+                  <div>
+                    <p className="text-sm opacity-80">Best Streak</p>
+                    <p className="text-2xl font-bold">{profile.longestStreak} days</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {alreadyCheckedInToday && (
+          <motion.div 
+            className="fixed top-20 right-4 z-50 bg-green-700  text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3"
+            variants={toastVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }}
+          >
+            
+            <div>
+              <p className="font-bold">Already checked in!</p>
+              <p className="text-sm">Come back tomorrow </p>
+            </div>
+          </motion.div>
+        )}
+        
+        {xpGained > 0 && (
+          <motion.div 
+            className="fixed top-20 right-4 z-50 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3"
+            variants={toastVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20
+            }}
+          >
+            <Zap className="w-6 h-6 animate-bounce" />
+            <div>
+              <p className="font-bold">+{xpGained} XP Earned!</p>
+              <p className="text-sm">Streak maintained! 🔥</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MotionCard 
-          className="bg-cyan-900" 
+          className=" bg-cyan-900 border-none text-white" 
           initial="hidden"
           animate="visible"
           variants={{
@@ -249,11 +399,11 @@ export default function GamificationDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm">Level</p>
-                <p className="text-2xl text-cyan-100 font-bold">{levelName}</p>
+                <p className="text-blue-100 text-sm font-medium">Level</p>
+                <p className="text-2xl text-white font-bold">{levelName}</p>
                 <p className="text-blue-100 text-xs">Lv. {profile.level}</p>
               </div>
-              <div className={`w-12 h-12 rounded-full ${levelColor} flex items-center justify-center`}>
+              <div className={`w-12 h-12 rounded-full ${levelColor} flex items-center justify-center shadow-lg`}>
                 <Trophy className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -261,7 +411,7 @@ export default function GamificationDashboard() {
         </MotionCard>
 
         <MotionCard 
-          className="bg-cyan-900" 
+          className="bg-cyan-900 border-none text-white" 
           initial="hidden"
           animate="visible"
           variants={{
@@ -275,11 +425,11 @@ export default function GamificationDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm">XP</p>
-                <p className="text-2xl text-cyan-100 font-bold">{profile.xp.toLocaleString()}</p>
+                <p className="text-orange-100 text-sm font-medium">XP</p>
+                <p className="text-2xl text-white font-bold">{profile.xp.toLocaleString()}</p>
                 <p className="text-orange-100 text-xs">{getLevelProgress().toFixed(0)}% to next level</p>
               </div>
-              <div className="w-12 h-12  flex items-center justify-center">
+              <div className="w-12 h-12  rounded-full flex items-center justify-center shadow-lg">
                 <Zap className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -287,7 +437,7 @@ export default function GamificationDashboard() {
         </MotionCard>
 
         <MotionCard 
-          className="bg-cyan-900" 
+          className="bg-cyan-900 border-none text-white" 
           initial="hidden"
           animate="visible"
           variants={{
@@ -301,11 +451,11 @@ export default function GamificationDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm">Streak</p>
-                <p className="text-2xl text-cyan-100 font-bold">{profile.streak}</p>
-                <p className="text-green-100 text-xs">Best: {profile.longestStreak}</p>
+                <p className="text-red-100 text-sm font-medium">Streak</p>
+                <p className="text-2xl text-white font-bold">{profile.streak}</p>
+                <p className="text-red-100 text-xs">Best: {profile.longestStreak}</p>
               </div>
-              <div className="w-12 h-12   flex items-center justify-center">
+              <div className="w-12 h-12  rounded-full flex items-center justify-center shadow-lg">
                 <Flame className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -313,7 +463,7 @@ export default function GamificationDashboard() {
         </MotionCard>
 
         <MotionCard 
-          className="bg-cyan-900" 
+          className="bg-cyan-900 border-none text-white" 
           initial="hidden"
           animate="visible"
           variants={{
@@ -327,13 +477,13 @@ export default function GamificationDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm">Health Score</p>
-                <p className={`text-2xl text-cyan-100 font-bold ${getHealthScoreColor(profile.healthScore)}`}>
+                <p className="text-purple-100 text-sm font-medium">Health Score</p>
+                <p className={`text-2xl text-white font-bold`}>
                   {profile.healthScore}/100
                 </p>
                 <p className="text-purple-100 text-xs">{getHealthScoreMessage(profile.healthScore)}</p>
               </div>
-              <div className="w-12 h-12 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -342,20 +492,29 @@ export default function GamificationDashboard() {
       </div>
 
       {/* Level Progress */}
-      <MotionCard >
+      <MotionCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Level Progress <p className="text-sm px-10 text-gray-500">On Every Post You Get 10 XP</p>
+            Level Progress
           </CardTitle>
-          
-          <CardDescription>
-            {profile.xp.toLocaleString()} XP • {levelName} (Level {profile.level})
+          <CardDescription className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <span>{profile.xp.toLocaleString()} XP • {levelName} (Level {profile.level})</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
+              Earn 10 XP per post!
+            </span>
           </CardDescription>
-          
         </CardHeader>
         <CardContent>
-          <Progress value={getLevelProgress()} className="h-3" />
-          <p className="text-sm text-gray-500 mt-2">
+          <div className="relative">
+            <Progress value={getLevelProgress()} className="h-4 " />
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{ width: `${getLevelProgress()}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-600 mt-3 font-medium">
             {((profile.level) * 500 - profile.xp).toLocaleString()} XP to reach {LEVEL_NAMES[Math.min(profile.level, LEVEL_NAMES.length - 1)]}
           </p>
         </CardContent>
@@ -363,7 +522,7 @@ export default function GamificationDashboard() {
 
       {/* Content Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <MotionCard >
+        <MotionCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-blue-500" />
@@ -371,30 +530,31 @@ export default function GamificationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold  text-gray-600">Tweets Generated</span>
-              <h1  className="text-md font-bold">{profile.aiGeneratedTweets}</h1>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">Posted to X</span>
-              <h1  className="text-md font-bold">{profile.xPostsCount}</h1>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">Threads Created</span>
-              <h1  className="text-md font-bold">{profile.threadsCreated}</h1>
-            </div>
-            {/* <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Drafts Saved</span>
-              <h1  className="text-md font-bold">{profile.draftsSaved}</h1>
-            </div> */}
-            {/* <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Editing Iterations</span>
-              <h1  className="text-md font-bold">{profile.editingIterations}</h1>
-            </div> */}
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Tweets Generated</span>
+              <span className="text-xl font-bold text-blue-600">{profile.aiGeneratedTweets}</span>
+            </motion.div>
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Posted to X</span>
+              <span className="text-xl font-bold text-green-600">{profile.xPostsCount}</span>
+            </motion.div>
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Threads Created</span>
+              <span className="text-xl font-bold text-purple-600">{profile.threadsCreated}</span>
+            </motion.div>
           </CardContent>
         </MotionCard>
 
-        <MotionCard >
+        <MotionCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-green-500" />
@@ -402,101 +562,42 @@ export default function GamificationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">Current Streak</span>
-              <h1  className="text-orange-600 text-md font-bold">
-                {profile.streak} days
-              </h1>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">Longest Streak</span>
-              <h1  className="text-purple-600 text-md font-bold">
-                {profile.longestStreak} days
-              </h1>
-              
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">This Week</span>
-              <h1  className="text-blue-600 text-md font-bold">
-                {profile.weeklyCheckIns} check-ins
-              </h1>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-gray-600">Last Check-in</span>
-              <h1  className="text-md font-bold">
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Current Streak</span>
+              <span className="text-xl font-bold text-orange-600">{profile.streak} days </span>
+            </motion.div>
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Longest Streak</span>
+              <span className="text-xl font-bold text-purple-600">{profile.longestStreak} days </span>
+            </motion.div>
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">This Week</span>
+              <span className="text-xl font-bold text-blue-600">{profile.weeklyCheckIns} check-ins</span>
+            </motion.div>
+            <motion.div 
+              className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+              whileHover={{ x: 5 }}
+            >
+              <span className="text-sm font-semibold text-gray-700">Last Check-in</span>
+              <span className="text-md font-bold text-gray-700">
                 {profile.lastCheckIn 
                   ? new Date(profile.lastCheckIn).toLocaleDateString()
                   : 'Never'
                 }
-              </h1>
-            </div>
+              </span>
+            </motion.div>
           </CardContent>
         </MotionCard>
       </div>
-
-      {/* Check-in Button */}
-      <Card>
-        <CardContent className="p-6 text-center relative">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Daily Check-in</h3>
-              <p className="text-gray-600 font-semibold text-sm">
-                Mark that you posted content today and keep your streak alive!
-              </p>
-            </div>
-
-            {/* Checked-in Toast Notification */}
-            <AnimatePresence>
-              {alreadyCheckedInToday && (
-                <motion.div 
-                  className="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"
-                  variants={toastVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 10
-                  }}
-                >
-                  <CheckCircle className="w-6 h-6" />
-                  <span className="font-medium">
-                    You've already checked in today!
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Motion Button with friendly hover and tap animations */}
-            <MotionButton
-              onClick={handleCheckIn}
-              disabled={checkingIn}
-              className="bg-cyan-900 hover:bg-cyan-800 text-white px-8 py-3 text-lg inline-flex items-center justify-center"
-              whileHover={{ scale: 1.03, y: -3, boxShadow: '0 10px 20px rgba(2,6,23,0.12)' }}
-              whileTap={{ scale: 0.985 }}
-              transition={btnHoverTransition}
-              aria-pressed={checkingIn}
-            >
-              {checkingIn ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Checking in...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  I Posted Today! (+5 XP)
-                </>
-              )}
-            </MotionButton>
-
-            <p className="text-xs text-gray-500">
-              Honor system - we trust you! 🎯
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </motion.div>
   );
 }
