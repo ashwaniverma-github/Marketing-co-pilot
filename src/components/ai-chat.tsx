@@ -563,7 +563,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between ">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center sm:space-x-2 space-x-1">
               <span className="font-semibold text-foreground text-sm sm:text-base">
                 {(session as any)?.xDisplayName || session?.user?.name || 'User'}
               </span>
@@ -732,66 +732,73 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
 
       {/* Input Area - Positioned at the bottom */}
       <div className="p-2 bg-background absolute bottom-0 left-0 right-0 w-11/12 sm:w-4/5 mx-auto z-40">
-        {/* Input wrapper */}
-        <div className="mx-auto rounded-lg bg-background">
-          <div className="relative flex items-center rounded-full border-gray-300 border-2 dark:border-0">
-            {/* Tweet mode pill placed inside the input area on the left */}
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20">
-              <button
-                onClick={toggleTweetMode}
-                aria-pressed={tweetMode}
-                className={`flex items-center space-x-2 px-3 py-1 rounded-xl border transition-all text-sm select-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-600 ${
-                  tweetMode
-                    ? 'bg-cyan-950 text-white border-transparent'
-                    : 'dark:bg-gray-700 text-foreground border-border hover:bg-muted'
-                }`}
-              >
-                <TwitterIcon className="w-4 h-4" />
-                <span className="font-medium">Tweet</span>
-              </button>
-            </div>
-
-            {/* Textarea - add left padding so the pill doesn't overlap the text */}
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !loading) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder={`Ask about ${productName}`}
-              className="w-full text-sm sm:text-base pl-26 pt-4 sm:pl-40 sm:pr-20 sm:py-3 bg-background rounded-full focus:outline-none focus:ring-0 focus:border-4 transition-all resize-none"
-              style={{
-                outline: 'none',
-                boxShadow: 'none',
-                borderColor: 'transparent',
-                verticalAlign: 'middle',
-                textAlign: 'start',
-                height: '60px',
-              }}
-            />
-
-            {/* Loading / Send button on the right */}
-            <button
-              onClick={send}
-              disabled={loading || !input.trim()}
-              className="absolute right-6 bottom-2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-              aria-label="Send"
-            >
-              {loading ? (
-                <div className="animate-spin w-10 h-10 border-2 border-current border-t-transparent rounded-full flex items-center justify-center"></div>
-              ) : (
-                <div className="w-10 h-10 bg-cyan-950 rounded-xl p-2 flex items-center justify-center">
-                  <Forward className="text-white w-full h-full" />
-                </div>
-              )}
-            </button>
-          </div>
-        </div>
+  {/* Input wrapper */}
+  <div className="mx-auto rounded-lg bg-background">
+    <div className="relative flex items-center justify-center rounded-full border-gray-300 border-2 dark:border-0">
+      {/* Tweet mode pill placed inside the input area on the left */}
+      <div className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20">
+        <button
+          onClick={toggleTweetMode}
+          aria-pressed={tweetMode}
+          className={`flex justify-center items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 rounded-xl border transition-all text-xs sm:text-sm select-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-600 ${
+            tweetMode
+              ? 'bg-cyan-950 text-white border-transparent'
+              : 'dark:bg-gray-700 text-foreground border-border hover:bg-muted'
+          }`}
+        >
+          <TwitterIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+        </button>
       </div>
+
+      {/* Textarea - responsive padding */}
+      <textarea
+        ref={textareaRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !loading) {
+            e.preventDefault();
+            send();
+          }
+        }}
+        placeholder={`Ask about ${productName}`}
+        className="w-full pl-14 pr-14 sm:pl-32 sm:pr-16 md:pl-40 md:pr-20 text-sm sm:text-base bg-background rounded-full resize-none scrollbar-hide"
+        style={{
+          outline: 'none',
+          boxShadow: 'none',
+          border: 'none',
+          verticalAlign: 'middle',
+          textAlign: 'start',
+          height: '52px',
+          overscrollBehavior: 'contain',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          paddingTop: '16px',
+          paddingBottom: '16px',
+          lineHeight: '20px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      />
+
+      {/* Loading / Send button on the right */}
+      <button
+        onClick={send}
+        disabled={loading || !input.trim()}
+        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+        aria-label="Send"
+      >
+        {loading ? (
+          <div className="animate-spin w-8 h-8 sm:w-10 sm:h-10 border-2 border-current border-t-transparent rounded-full flex items-center justify-center"></div>
+        ) : (
+          <div className="w-8 h-8 sm:w-8 sm:h-8 bg-cyan-950 rounded-xl p-1 flex items-center justify-center">
+            <Forward className="text-white w-full h-full" />
+          </div>
+        )}
+      </button>
+    </div>
+  </div>
+</div>
 
       {/* Toast Notification */} 
       {showToast && (
