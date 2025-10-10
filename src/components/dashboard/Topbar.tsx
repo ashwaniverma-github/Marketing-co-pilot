@@ -21,19 +21,19 @@ export function Topbar({
   tabs,
 }: TopbarProps) {
   return (
-    <div className="w-full sm:sticky top-[4.5rem] z-30">
+    <div className="w-full sm:sticky top-[4.5rem] z-30 ">
       {/* Horizontal Navigation Bar */}
-      <div className=" mx-auto flex justify-center mb-4">
+      <div className="mx-auto flex justify-start sm:justify-center mb-4 overflow-x-auto">
         <div className="flex justify-between items-center">
           {/* Tab Navigation */}
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 min-w-max ">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 sm:py-1 py-4 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 sm:py-1 py-4 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                     isActive
                       ? 'text-cyan-950 dark:text-cyan-800 transform scale-105'
                       : 'text-muted-foreground hover:text-foreground hover:scale-105'
