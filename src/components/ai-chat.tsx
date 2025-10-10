@@ -654,8 +654,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               
               return (
                 <div key={i} className={`${m.role === 'user' ? 'text-right' : 'text-left'} relative`}>
-                  <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background' : ' text-foreground'} relative`}>
-                    <div className="whitespace-pre-wrap break-words">
+                  <div className={`inline-block px-3 py-3 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-foreground text-background ml-auto' : 'bg-muted text-foreground mr-auto'} relative`}>
+                    <div className="whitespace-pre-wrap break-words text-left">
                       {m.role === 'user' ? m.content : (
                           formatContent(m.content)
                         )
