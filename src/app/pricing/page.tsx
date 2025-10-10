@@ -313,18 +313,6 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-6 py-20">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-foreground font-mono">Indiegrowth</span>
-          </div>
-          <div className="text-muted-foreground text-sm">
-            © 2025 <span className="font-mono">Indiegrowth</span>. Built to grow your app.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
