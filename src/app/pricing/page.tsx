@@ -204,7 +204,7 @@ export default function PricingPage() {
             </p>
             
             <div className="mb-6">
-              <span className="text-5xl font-bold text-foreground">$10</span>
+              <span className="text-5xl font-bold text-foreground">$9</span>
               <span className="text-muted-foreground ml-2">/ month</span>
             </div>
             <ul className="mb-8 space-y-4 text-left">
@@ -256,14 +256,14 @@ export default function PricingPage() {
           {/* One-Time Purchase Card */}
           <div className="w-full max-w-md bg-background border rounded-2xl p-6 shadow-lg">
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              One-Time Access
+              Lifetime Access
             </h2>
             <p className="text-muted-foreground mb-6">
               Get full access to Indiegrowth Pro features without a recurring subscription
             </p>
             
             <div className="mb-6">
-              <span className="text-5xl font-bold text-foreground">$29</span>
+              <span className="text-5xl font-bold text-foreground">$49</span>
               <span className="text-muted-foreground ml-2">/ one-time</span>
             </div>
             <ul className="mb-8 space-y-4 text-left">
