@@ -14,7 +14,7 @@ export default function UseCase(){
 
           <div className="flex justify-center items-center">
           <MuxPlayer
-              playbackId="P01Jq4xow01iJwXwK6QHaJGUwb8a3czkQCpg5VkAzZD5A"
+              playbackId="izqC01vjPYbfgoun8MbI01bGSIUsxf2A00GVld00Tq8eBz4"
               style={{height: '100%', width: '90%'}}
               metadata={{
               video_id: "video-id-54321",
