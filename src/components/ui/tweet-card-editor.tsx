@@ -106,7 +106,7 @@ export function convertHtmlToTweetText(html: string): string {
 // Quick action suggestions
 const quickActions = [
   { label: 'Make it engaging', prompt: 'Make this tweet more engaging and attention-grabbing' },
-  { label: 'Add emojis', prompt: 'Add relevant emojis to make it more expressive' },
+  { label: 'Use bullet points', prompt: 'Use bullet points in the tweet for better readable format , with a eye catching heading' },
   { label: 'Shorten it', prompt: 'Make this tweet more concise and punchy' },
   { label: 'Add CTA', prompt: 'Add a clear call-to-action at the end' },
   { label: 'Professional tone', prompt: 'Rewrite in a professional tone' },
