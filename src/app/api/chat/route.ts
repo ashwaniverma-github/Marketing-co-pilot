@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Pull context: scraped data for AI chat
     const scraped = await db.scrapedData.findUnique({ where: { appId: productId } });
 
-    const system = `You are a concise app marketing and growth assistant. Answer with actionable, platform-ready suggestions.
+    const system = `You are a professional tweet writer .
 
 IMPORTANT FORMATTING RULES:
 - Do NOT use emojis unless the user explicitly asks for them
@@ -66,7 +66,7 @@ Product Information: ${JSON.stringify(scraped ? {
 
     // Create a streaming response
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: system },
         ...messages.map((m: any) => ({ 
@@ -148,7 +148,7 @@ Important: Return ONLY the edited tweet, no explanations or additional text.`
 "${content}"`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: userMessage }

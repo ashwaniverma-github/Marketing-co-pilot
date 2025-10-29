@@ -47,7 +47,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [tweetMode, setTweetMode] = useState(false);
+  // Remove tweetMode state and always set it to true
+  const [tweetMode] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -336,7 +337,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     }
   };
 
-  // Modify send method to check free usage first
+  // Modify send method to always use tweet mode
   const send = async () => {
     // Check free usage before sending
     const canProceed = await checkFreeUsage();
@@ -366,9 +367,8 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
           productName, 
           productUrl, 
           messages: next,
-          tweetMode,
-          // Add a parameter to specify number of tweets if needed
-          tweetCount: tweetMode ? 2 : undefined // Default to 1 tweet
+          tweetMode: true, // Always true
+          tweetCount: 2 // Default to 2 tweets
         }),
       });
 
@@ -522,19 +522,11 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     return suggestions[Math.floor(Math.random() * suggestions.length)];
   }, [productName, productUrl]);
 
-  // Toggle tweet mode with automatic suggestion
+  // Modify toggleTweetMode to do nothing since tweet mode is always on
   const toggleTweetMode = useCallback(() => {
-    const newTweetModeState = !tweetMode;
-    setTweetMode(newTweetModeState);
-
-    // If enabling tweet mode, set a random tweet suggestion
-    if (newTweetModeState) {
-      setInput(getRandomTweetSuggestion());
-    } else {
-      // Clear input when disabling tweet mode
-      setInput('');
-    }
-  }, [tweetMode, getRandomTweetSuggestion]);
+    // No-op since tweet mode is always enabled
+    return;
+  }, []);
 
 
   const TweetCard = ({ content, index }: { content: string; index?: number }) => (
@@ -737,17 +729,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
     <div className="relative flex items-center justify-center rounded-full border-gray-300 border-2 dark:border-0">
       {/* Tweet mode pill placed inside the input area on the left */}
       <div className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20">
-        <button
-          onClick={toggleTweetMode}
-          aria-pressed={tweetMode}
-          className={`flex justify-center items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 rounded-xl border transition-all text-xs sm:text-sm select-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-600 ${
-            tweetMode
-              ? 'bg-cyan-950 text-white border-transparent'
-              : 'dark:bg-gray-700 text-foreground border-border hover:bg-muted'
-          }`}
-        >
-          <TwitterIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-        </button>
+        {/* Tweet mode button removed */}
       </div>
 
       {/* Textarea - responsive padding */}
@@ -761,7 +743,7 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
             send();
           }
         }}
-        placeholder={`Ask about ${productName}`}
+        placeholder={`Write a tweet about ${productName}`}
         className="w-full pl-14 pr-14 sm:pl-32 sm:pr-16 md:pl-40 md:pr-20 text-sm sm:text-base bg-background rounded-full resize-none scrollbar-hide"
         style={{
           outline: 'none',
