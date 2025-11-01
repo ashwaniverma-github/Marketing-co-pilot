@@ -13,7 +13,7 @@ export default function FAQSection() {
   const faqs: FAQItem[] = [
     {
       question: "What is Indiegrowth?",
-      answer: "Indiegrowth is not just an AI tweet writer , it helps you write tweets on your own then customize it the way people love it , Also helps your build habits for daily writing and track your progress."
+      answer: "Indiegrowth is not just an AI tweet writer , it helps you write tweets on your own then customize it the way people love it , Also helps you build habits for daily writing and track your progress."
     },
     {
       question: "How does the AI tweet writer helps you grow your app?",
