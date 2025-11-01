@@ -38,7 +38,7 @@ export default function AboutPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">What I Do</h2>
+          <h2 className="text-2xl font-semibold mb-4">What you can do with Indiegrowth</h2>
           <ul className="list-disc pl-6 text-muted-foreground space-y-3">
             <li>Write tweets that resonates with your product</li>
             <li>Make it a habit and track your progress </li>
@@ -49,7 +49,7 @@ export default function AboutPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">My Journey</h2>
           <p className="text-muted-foreground leading-relaxed">
-            As a passionate developer and entrepreneur, I understand the challenges of building and growing independent products. I leverage the latest AI technologies to provide actionable insights and support for indie developers like myself.
+            As a passionate developer and entrepreneur, I understand the challenges of writing better tweets and growing your app.
           </p>
         </section>
 
