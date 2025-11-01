@@ -19,11 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "Indiegrowth - Your App's Growth Co-Pilot",
+    default: "Write tweets that grows your brand",
     template: "%s | Indiegrowth"
   },
-  description: "Just Give Us The Url Of Your App And We Will help you write tweets and contents that grows your app",
-  keywords: ["app growth", "startup", "product analytics", "growth hacking"],
+  description: "Just give the url of your app and write tweets that grows your app",
+  keywords: ["app growth", "startup", "tweet writer", "growth hacking"],
   authors: [{ name: "Indiegrowth Team" }],
   creator: "ashwani",
   publisher: "Indiegrowth",
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: SITE,
-    title: "Indiegrowth - Your App's Growth Co-Pilot",
-    description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+    title: "Write tweets that grows your brand",
+    description: "Just give the url of your app and write tweets that grows your app",
     siteName: "Indiegrowth",
     images: [
       {
@@ -48,14 +48,14 @@ export const metadata: Metadata = {
         url: `${SITE}/social-preview.png?v=2`,
         width: 1200,
         height: 630,
-        alt: "Indiegrowth - Your App's Growth Co-Pilot",
+        alt: "Indiegrowth - Write tweets that grows your brand",
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Indiegrowth - Your App's Growth Co-Pilot",
-    description: "Just Give Us The Url Of Your App And We Will Handle The rest , from content to growth",
+    title: "Write tweets that grows your brand",
+    description: "Just give the url of your app and write tweets that grows your app",
     creator: "@indiegrowth",
     // explicit absolute URL with query string to force refetch
     images: [`${SITE}/social-preview.png?v=2`]
