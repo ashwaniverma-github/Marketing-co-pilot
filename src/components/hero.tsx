@@ -77,7 +77,7 @@ export default function Hero(){
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-sans text-foreground leading-tight mb-6 max-w-3xl mx-auto">
-            Write tweets and contents that grows your{' '}
+            Write tweets that grows your{' '}
             <span className="inline-block relative">
               <span className="text-cyan-900 dark:text-cyan-800 font-bold">
                 {displayText}
