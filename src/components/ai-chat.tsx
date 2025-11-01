@@ -658,17 +658,6 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               );
             })}
             
-            {loading && (
-              <div className="text-left">
-                <div className="inline-block px-3 py-2 rounded-lg text-foreground">
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"></div>
-                    <span>Thinking...</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             {/* Typing indicator for normal AI responses */}
             {/* This section is removed as typing effect is removed */}
           </div>
@@ -717,6 +706,19 @@ export function AiChat({ productId, productName, productUrl, onOpenEditor }: AiC
               })()}
             </div>
           )}
+
+          {/* Thinking indicator - now below tweet cards */}
+          {loading && (
+            <div className="text-left mt-4">
+              <div className="inline-block px-3 py-2 rounded-lg text-foreground">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"></div>
+                  <span>Thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
