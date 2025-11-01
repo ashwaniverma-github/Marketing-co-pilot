@@ -132,10 +132,6 @@ export function Navbar({
                 <DropdownMenuItem className="font-medium">
                   {user.name}
                 </DropdownMenuItem>
-                
-                {/* For Twitter users, show username and verified status */}][
-                  
-                ]
                 {(session as any)?.xUsername ? (
                   <DropdownMenuItem className="flex items-center text-muted-foreground text-sm">
                     @{(session as any).xUsername}
