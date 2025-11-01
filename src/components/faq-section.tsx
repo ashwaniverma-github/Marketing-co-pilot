@@ -17,7 +17,7 @@ export default function FAQSection() {
     },
     {
       question: "How does the AI tweet writer helps you grow your app?",
-      answer: "Our AI analyzes your app, industry, and target audience to generate tailored content, tweets, and marketing materials that resonate with your potential users."
+      answer: "You enter your app name and url and the AI will generate tweets about your app and you can customize it the way you want."
     },
     {
       question: "Is there a free trial available?",
