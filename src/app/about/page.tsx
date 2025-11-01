@@ -1,33 +1,21 @@
 'use client';
-
-import Link from 'next/link';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { useState } from 'react';
+import MultipageNav from '@/components/dashboard/multipage-nav';
 
 export default function AboutPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md z-50 border-border">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-foreground text-xl font-mono">Indiegrowth</span>
-          </div>
-          
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
-            <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
-            <div className="ml-4">
-              <ThemeToggle />
-            </div>
-            <Link href="/login" className="inline-block bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/90 font-semibold">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <MultipageNav isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
 
       {/* About Page Content */}
-      <div className="container mx-auto px-4 py-24 max-w-4xl">
+      <div className="container mx-auto px-4 py-24 max-w-4xl mt-16">
         <h1 className="text-4xl font-bold mb-8 text-foreground">About Indiegrowth</h1>
         
         <section className="mb-12">

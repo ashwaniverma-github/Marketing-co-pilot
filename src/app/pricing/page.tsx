@@ -1,8 +1,8 @@
 "use client";
-import { signOut, useSession } from 'next-auth/react';
-import Link from 'next/link';
+import {  useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import MultipageNav from '@/components/dashboard/multipage-nav';
 
 
 type Product = {
@@ -17,6 +17,11 @@ export default function PricingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [checkoutType, setCheckoutType] = useState<'none' | 'subscription' | 'one-time'>('none');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   async function handleSubscriptionCheckout() {
     setCheckoutType('subscription');
@@ -174,18 +179,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md z-50 border-b border-border">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-foreground text-xl font-mono">Indiegrowth</span>
-          </Link>
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="text-muted-foreground hover:text-foreground">Home</Link>
-            <Link href="/pricing" className="text-foreground font-semibold">Pricing</Link>
-            {session ? <button className="font-semibold"  onClick={() => signOut()}>Logout</button> : <button className="font-semibold" onClick={() => router.push('/login')}>Login</button>}
-          </div>
-        </div>
-      </nav>
+      <MultipageNav isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
 
       {/* Pricing Hero */}
       <section className="pt-24 px-6 text-center space-y-4">
