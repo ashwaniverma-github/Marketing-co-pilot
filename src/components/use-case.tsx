@@ -1,4 +1,4 @@
-import MuxPlayer from "@mux/mux-player-react"
+
 export default function UseCase(){
     return(
         <section className="px-6 py-20">
@@ -13,19 +13,12 @@ export default function UseCase(){
           </div>
 
           <div className="flex justify-center items-center">
-          <MuxPlayer
-              playbackId="izqC01vjPYbfgoun8MbI01bGSIUsxf2A00GVld00Tq8eBz4"
-              style={{height: '100%', width: '90%'}}
-              metadata={{
-              video_id: "video-id-54321",
-              video_title: "Indiegrowth Demo",
-              viewer_user_id: "user-id-007",
-              }}
-              autoPlay={true}
-              loop={true}
-              muted={true}
-              className='rounded-2xl overflow-hidden shadow-lg'
-              
+            <iframe
+              src="https://player.mux.com/izqC01vjPYbfgoun8MbI01bGSIUsxf2A00GVld00Tq8eBz4"
+              style={{width: '80%', border: 'none', aspectRatio: '16/9'}}
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+              allowFullScreen
+              className="rounded-2xl overflow-hidden shadow-lg"
             />
           </div>
         </div>
