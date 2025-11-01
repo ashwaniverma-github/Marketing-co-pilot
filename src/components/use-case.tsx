@@ -5,10 +5,10 @@ export default function UseCase(){
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-2xl sm:text-3xl font-normal text-foreground mb-4">
-              Just Give Us The Url Of Your App And We Will Handle The Rest
+              Just give the url of your app and write tweets that grows your app
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground">
-              Our AI Handles Content, Marketing, Growth and More For Your App , just ask
+              You can write tweets on your own and customize it the way you want for better engagement.
             </p>
           </div>
 
