@@ -12,11 +12,11 @@ export default function FAQSection() {
 
   const faqs: FAQItem[] = [
     {
-      question: "What is IndieGrowth?",
+      question: "What is Indiegrowth?",
       answer: "Indiegrowth is not just an AI tweet writer , it helps you write tweets on your own then customize it the way people love it , Also helps your build habits for daily writing and track your progress."
     },
     {
-      question: "How does the AI tweet writer work?",
+      question: "How does the AI tweet writer helps you grow your app?",
       answer: "Our AI analyzes your app, industry, and target audience to generate tailored content, tweets, and marketing materials that resonate with your potential users."
     },
     {
@@ -45,7 +45,7 @@ export default function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Got questions? We've got answers. Here are some common queries about IndieGrowth.
+            Got questions? We've got answers. Here are some common queries about Indiegrowth.
           </p>
         </div>
 
