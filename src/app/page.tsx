@@ -5,6 +5,7 @@ import UseCase from '@/components/use-case';
 import Footer from '@/components/footer';
 import CTA from '@/components/cta';
 import CTAFooter from '@/components/cta2';
+import FAQSection from '@/components/faq-section';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <UseCase/>
       <CTA/>
       <FeatureSection/>
+      <FAQSection/>
       <CTAFooter/>
       <Footer/>
     </div>
