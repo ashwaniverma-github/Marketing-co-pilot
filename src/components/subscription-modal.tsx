@@ -199,7 +199,7 @@ export function SubscriptionModal({
               </h3>
               
               <div className="mb-6">
-                <span className="text-4xl font-bold text-foreground">$10</span>
+                <span className="text-4xl font-bold text-foreground">$9</span>
                 <span className="text-muted-foreground ml-2">/ month</span>
               </div>
 
@@ -256,7 +256,7 @@ export function SubscriptionModal({
               </h3>
               
               <div className="mb-6">
-                <span className="text-4xl font-bold text-foreground">$29</span>
+                <span className="text-4xl font-bold text-foreground">$49</span>
                 <span className="text-muted-foreground ml-2">/ one-time</span>
               </div>
 
