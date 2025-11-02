@@ -54,7 +54,7 @@ export function Navbar({
       <div className="flex items-center justify-center">
         <div className="flex items-center  sm:space-x-10">
           
-          <span className="hidden md:block font-bold text-foreground font-mono">Indiegrowth - Your App's Growth Co-Pilot</span>
+          <span className="hidden md:block font-bold text-foreground font-mono">Indiegrowth - Write tweets that grows your brand</span>
           <span className="block md:hidden font-bold  text-foreground font-mono">Indiegrowth</span>
           
           {/* Product Selector - Only when products exist */}
